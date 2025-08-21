@@ -1,0 +1,16 @@
+export const sucursales = [
+  { id: "1", nombre: "Sucursal Anonos" },
+  { id: "2", nombre: "Sucursal Cartago" },
+  { id: "3", nombre: "Sucursal Escazú" },
+  { id: "4", nombre: "Sucursal San Sebastián" },
+  { id: "5", nombre: "Sucursal Santa Ana" },
+  { id: "6", nombre: "Sucursal Alajuela" },
+  { id: "7", nombre: "Sucursal Guápiles" },
+  { id: "8", nombre: "Sucursal Curridabat" },
+  { id: "9", nombre: "Sucursal Heredia" },
+  { id: "10", nombre: "Sucursal Liberia" },
+  { id: "11", nombre: "Sucursal Pérez Zeledón" },
+  { id: "12", nombre: "Sucursal Mango Plaza" },
+  { id: "13", nombre: "Sucursal Avenida 10" },
+  { id: "14", nombre: "Sucursal Taller Movil" },
+];

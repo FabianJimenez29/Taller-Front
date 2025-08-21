@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const reviews = [
@@ -14,7 +15,41 @@ const reviews = [
 
 ];
 
+const bannerImages = [
+  require("../../assets/images/banner.png"),
+  require("../../assets/images/banner2.png"),
+  require("../../assets/images/banner3.png"),
+  require("../../assets/images/banner4.png"),
+  require("../../assets/images/banner5.png"),
+  // Agrega más imágenes aquí
+];
+
 export default function App(): React.ReactElement {
+  const router = useRouter(); // <--- Agrega esta línea
+  const scrollRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const bannerWidth = 385;
+
+  // Auto-scroll effect: solo avanza a la derecha y vuelve al inicio
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(prevIndex => {
+        const nextIndex = (prevIndex + 1) % bannerImages.length;
+        scrollRef.current?.scrollTo({ x: nextIndex * bannerWidth, animated: true });
+        return nextIndex;
+      });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []); // Solo se crea una vez
+
+  // Actualiza el índice al hacer scroll manual
+  const onScroll = (event: any) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
+    setCurrentIndex(index);
+  };
+
   return (
     <View style={styles.container}>
       {/* LOGO Y ICONO DE LENGUAJE */}
@@ -23,7 +58,7 @@ export default function App(): React.ReactElement {
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => alert("Volver al inicio")}>
+          <TouchableOpacity onPress={() => router.push("/")} style={styles.logoContainer}>
             <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>
@@ -41,15 +76,47 @@ export default function App(): React.ReactElement {
         <Text style={styles.subtitle}>Fabian Jimenez</Text>
       </View>
 
-      {/* BANNER DE PUBLICIDAD */}
-      <Image
-        source={require("../../assets/images/banner.png")}
-        style={styles.banner}
-      />
+      {/* BANNER DE PUBLICIDAD - Carrusel con marco redondeado y sombra externa */}
+      <View style={styles.bannerShadow}>
+        <View style={styles.bannerFrame}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={styles.bannerCarousel}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+          >
+            {bannerImages.map((img, idx) => (
+              <Image
+                key={idx}
+                source={img}
+                style={styles.banner}
+              />
+            ))}
+          </ScrollView>
+          {/* Indicadores de página */}
+          <View style={styles.carouselDots}>
+            {bannerImages.map((_, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.dot,
+                  currentIndex === idx && styles.dotActive,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
 
       {/* BOTONES PRINCIPALES */}
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => alert("Agendar reparación")}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/scheduleRepair")} // <--- Cambia aquí
+        >
           <View style={styles.buttonContent}>
             <Text style={styles.buttonText}>Schedule Repair</Text>
             <Image source={require("../../assets/images/ScheduleRepairIcon.png")} style={styles.buttonIconSchedule} />
@@ -147,11 +214,33 @@ const styles = StyleSheet.create({
     color: "#76B414",
     fontWeight: "bold",
   },
-  banner: {
-    width: "150%",
+  bannerShadow: {
+    alignSelf: "center",
+    borderRadius: 28,
+    // Sombra externa
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 18,
+  },
+  bannerFrame: {
+    width: 385,
     height: 180,
-    resizeMode: "contain",
-    marginTop: 5,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#22222222",
+  },
+  bannerCarousel: {
+    width: 385,
+    height: 180,
+  },
+  banner: {
+    width: 385,
+    height: 180,
+    resizeMode: "cover",
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -217,7 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E51514",
     padding: 15,
     width: 385,
-    borderRadius: 15,
+    borderRadius: 20,
     gap: 15,
     minHeight: 160,
   },
@@ -270,6 +359,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
+  },
+  carouselDots: {
+    position: "absolute",
+    bottom: 0, // más abajo del carrusel
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#76B414",
+    marginHorizontal: 6,
+    borderWidth: 2,
+    borderColor: "transparent", // Agrega esto
+  },
+  dotActive: {
+    backgroundColor: "#E51514",
+    borderWidth: 2,
+    width: 15,
+    borderColor: "transparent", // Agrega esto
   },
 });
 
