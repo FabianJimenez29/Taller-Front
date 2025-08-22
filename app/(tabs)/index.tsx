@@ -59,7 +59,7 @@ export default function App(): React.ReactElement {
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => alert("Volver al inicio")}>
+          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
             <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 65, // Espacio reservado para el MenuBar
   },
   logoRow: {
     width: "100%",
@@ -278,8 +279,7 @@ const styles = StyleSheet.create({
   reviews: {
     width: "100%",
     paddingHorizontal: 22,
-
-
+    marginBottom: 20, // Espacio adicional antes del MenuBar
   },
   reviewsContent: {
     backgroundColor: "#E51514",

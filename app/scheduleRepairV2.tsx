@@ -121,7 +121,10 @@ const VehicleInfo = (): React.ReactElement => {
             <View style={styles.logoRow}>
                 <TouchableOpacity
                     style={styles.languageIcon}
-                    onPress={() => alert("Cambiar idioma")}
+                    onPress={() => router.push({
+                        pathname: "/language",
+                        params: { previousScreen: "/scheduleRepairV2" }
+                    })}
                 >
                     <Ionicons name="language-outline" size={36} color="#000000ff" />
                 </TouchableOpacity>

@@ -24,56 +24,60 @@ const MenuBar: React.FC<MenuBarProps> = ({
 }) => {
   const router = useRouter();
 
+  // Función para determinar si estamos navegando hacia adelante o hacia atrás
+  const isNavigatingForward = (currentTab: string, targetTab: string): boolean => {
+    const tabOrder = ['home', 'categories', 'profile', 'location', 'contact'];
+    const currentIndex = tabOrder.indexOf(currentTab);
+    const targetIndex = tabOrder.indexOf(targetTab);
+    return targetIndex > currentIndex;
+  };
+
   const handleTabPress = (tab: string) => {
     if (onTabPress) {
       onTabPress(tab);
     } else {
-      // Navegación jerárquica inteligente
+      // Si estamos en la misma pestaña, no hacemos nada
+      if (activeTab === tab) return;
+      
+      const forward = isNavigatingForward(activeTab, tab);
+      const direction = forward ? "right" : "left";
+      
+      // Navegación con transiciones direccionales
       switch (tab) {
-        case 'home':
-          // Siempre volver al origen (izquierda)
-          router.back();
-          break;
-        case 'categories':
-          // Si estamos en home, ir hacia la derecha
-          if (activeTab === 'home') {
-            router.push("/categories");
-          } else {
-            // Desde cualquier otra pantalla, volver al origen primero
-            router.push("/");
-          }
-          break;
-        case 'profile':
-          // Si estamos en home o categories, ir hacia la derecha
-          if (activeTab === 'home' || activeTab === 'categories') {
-            router.push("/profile");
-          } else {
-            // Desde location o contact, volver a categories primero
-            if (activeTab === 'location' || activeTab === 'contact') {
-              router.push("/categories");
-            } else {
-              router.push("/profile");
-            }
-          }
-          break;
-        case 'location':
-          // Si estamos en home, categories o profile, ir hacia la derecha
-          if (activeTab === 'home' || activeTab === 'categories' || activeTab === 'profile') {
-            router.push("/location");
-          } else {
-            // Desde contact, volver a profile primero
-            router.push("/profile");
-          }
-          break;
-        case 'contact':
-          // Si estamos en home, categories, profile o location, ir hacia la derecha
-          if (activeTab === 'home' || activeTab === 'categories' || activeTab === 'profile' || activeTab === 'location') {
-            router.push("/contact");
-          } else {
-            // Ya estamos en contact
+          case 'home':
+            router.push({
+              pathname: "/",
+              params: { direction }
+            });
             break;
-          }
-          break;
+            
+          case 'categories':
+            router.push({
+              pathname: "/categories",
+              params: { direction }
+            });
+            break;
+            
+          case 'profile':
+            router.push({
+              pathname: "/profile",
+              params: { direction }
+            });
+            break;
+            
+          case 'location':
+            router.push({
+              pathname: "/location",
+              params: { direction }
+            });
+            break;
+            
+          case 'contact':
+            router.push({
+              pathname: "/contact",
+              params: { direction }
+            });
+            break;
       }
     }
   };
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
-    paddingVertical: 17,
+    paddingVertical: 10,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",

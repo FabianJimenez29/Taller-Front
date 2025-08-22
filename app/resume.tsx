@@ -122,7 +122,13 @@ const Resume = (): React.ReactElement => {
     <View style={styles.container}>
       {/* ENCABEZADO */}
       <View style={styles.logoRow}>
-        <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}>
+        <TouchableOpacity 
+          style={styles.languageIcon} 
+          onPress={() => router.push({
+            pathname: "/language",
+            params: { previousScreen: "/resume" }
+          })}
+        >
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>

@@ -10,64 +10,10 @@ import {
   View,
 } from "react-native";
 import MenuBar from "../components/MenuBar";
+import { categories } from "../constants/Categories";
 
 // Datos de las categorías (las imágenes las agregarás tú)
-const categories = [
-  {
-    id: 1,
-    name: "Baterías",
-    icon: "battery-charging-outline",
-    description: "Baterías para vehículos"
-  },
-  {
-    id: 2,
-    name: "Frenos",
-    icon: "disc-outline",
-    description: "Discos, pastillas y sistemas de frenado"
-  },
-  {
-    id: 3,
-    name: "Llantas",
-    icon: "ellipse-outline",
-    description: "Neumáticos y ruedas"
-  },
-  {
-    id: 4,
-    name: "Lubricantes",
-    icon: "water-outline",
-    description: "Aceites y fluidos"
-  },
-  {
-    id: 5,
-    name: "Limpieza",
-    icon: "sparkles-outline",
-    description: "Productos de limpieza automotriz"
-  },
-  {
-    id: 6,
-    name: "Filtros",
-    icon: "funnel-outline",
-    description: "Filtros de aceite, aire y combustible"
-  },
-  {
-    id: 7,
-    name: "Amortiguadores",
-    icon: "resize-outline",
-    description: "Suspensión y amortiguación"
-  },
-  {
-    id: 8,
-    name: "Refrigerante",
-    icon: "thermometer-outline",
-    description: "Líquidos refrigerantes"
-  },
-  {
-    id: 9,
-    name: "Accesorios",
-    icon: "construct-outline",
-    description: "Accesorios y repuestos varios"
-  }
-];
+
 
 const Categories = () => {
   const router = useRouter();
@@ -83,19 +29,20 @@ const Categories = () => {
       {/* HEADER */}
       <View style={styles.logoRow}>
         {/* Icono de idioma */}
-        <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}>
+        <TouchableOpacity 
+          style={styles.languageIcon} 
+          onPress={() => router.push({
+            pathname: "/language",
+            params: { previousScreen: "/categories" }
+          })}
+        >
           <Ionicons name="language-outline" size={36} color="#000000" />
         </TouchableOpacity>
 
         {/* Logo centrado */}
-        <View style={styles.logoCenter}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../assets/images/logo.png")}
-              style={styles.logo}
-            />
-          </View>
-        </View>
+        <TouchableOpacity style={styles.logoContainer} onPress={() => router.back()}>
+            <Image source={require("../assets/images/logo.png")} style={styles.logo} />
+          </TouchableOpacity>
       </View>
 
       {/* TÍTULO */}
@@ -138,6 +85,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingBottom: 65, // Espacio reservado para el MenuBar
   },
   logoRow: {
     width: "100%",
