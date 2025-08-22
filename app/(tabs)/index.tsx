@@ -58,16 +58,12 @@ export default function App(): React.ReactElement {
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity onPress={() => router.push("/")} style={styles.logoContainer}>
+          <TouchableOpacity style={styles.logoContainer} onPress={() => alert("Volver al inicio")}>
             <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.profileCircle} onPress={() => alert("Perfil de usuario")}>
-          {/* Si tienes una imagen de usuario, reemplaza el Ionicons por <Image ... /> */}
-          <Image
-            source={require("../../assets/images/user.png")}
-            style={{ width: 40, height: 40, borderRadius: 20 }}
-          />
+        <TouchableOpacity style={styles.logoutButton} onPress={() => router.push("/login")}>
+          <Ionicons name="log-out-outline" size={32} color="#E51514" />
         </TouchableOpacity>
       </View>
 
@@ -383,6 +379,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     width: 15,
     borderColor: "transparent", // Agrega esto
+  },
+  logoutButton: {
+    position: "absolute",
+    right: 20,
+    zIndex: 2,
   },
 });
 

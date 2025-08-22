@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { servicios } from "../../constants/Servicios";
-import { sucursales } from "../../constants/Sucursales";
+import { servicios } from "../constants/Servicios";
+import { sucursales } from "../constants/Sucursales";
+import { useAppointment } from "../contexts/AppointmentContext";
 
 function getFechasCita(): { label: string; value: string }[] {
     const fechas: { label: string; value: string }[] = [];
@@ -31,8 +32,6 @@ function getFechasCita(): { label: string; value: string }[] {
     return fechas;
 }
 
-const router = useRouter();
-
 const horasCita = [
     { label: "08:00 AM", value: "08:00" },
     { label: "09:00 AM", value: "09:00" },
@@ -45,16 +44,34 @@ const horasCita = [
 ];
 
 const ScheduleRepair = (): React.ReactElement => {
-    const [sucursal, setSucursal] = useState("");
-    const [servicio, setServicio] = useState("");
-    const [fecha, setFecha] = useState("");
-    const [hora, setHora] = useState("");
+    const router = useRouter();
+    const { appointmentData, updateAppointmentData } = useAppointment();
+    
+    const [sucursal, setSucursal] = useState(appointmentData.sucursal || "");
+    const [servicio, setServicio] = useState(appointmentData.servicio || "");
+    const [fecha, setFecha] = useState(appointmentData.fecha || "");
+    const [hora, setHora] = useState(appointmentData.hora || "");
 
     // Control de modals
     const [modalSucursal, setModalSucursal] = useState(false);
     const [modalServicio, setModalServicio] = useState(false);
     const [modalFecha, setModalFecha] = useState(false);
     const [modalHora, setModalHora] = useState(false);
+
+    // Guardar datos en el contexto cuando cambien
+    useEffect(() => {
+        updateAppointmentData({ sucursal, servicio, fecha, hora });
+    }, [sucursal, servicio, fecha, hora]);
+
+    // Limpiar campos si no hay datos en el contexto
+    useEffect(() => {
+        if (!appointmentData.sucursal && !appointmentData.servicio && !appointmentData.fecha && !appointmentData.hora) {
+            setSucursal("");
+            setServicio("");
+            setFecha("");
+            setHora("");
+        }
+    }, [appointmentData]);
 
     return (
         <View style={styles.container}>
@@ -66,7 +83,7 @@ const ScheduleRepair = (): React.ReactElement => {
                 <View style={styles.logoCenter}>
                     <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
                         <Image
-                            source={require("../../assets/images/logo.png")}
+                            source={require("../assets/images/logo.png")}
                             style={styles.logo}
                         />
                     </TouchableOpacity>
@@ -207,7 +224,7 @@ const ScheduleRepair = (): React.ReactElement => {
             <View style={styles.bottomButtons}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.push("/")} 
+                    onPress={() => router.back()} 
                 >
                     <Text style={styles.buttonTextBottom}>Volver</Text>
                 </TouchableOpacity>
