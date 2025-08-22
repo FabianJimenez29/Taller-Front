@@ -207,14 +207,14 @@ const ScheduleRepair = (): React.ReactElement => {
             <View style={styles.bottomButtons}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.push("/")} // <--- Cambia aquí
+                    onPress={() => router.push("/")} 
                 >
                     <Text style={styles.buttonTextBottom}>Volver</Text>
                 </TouchableOpacity>
                 {sucursal && servicio && fecha && hora && (
                     <TouchableOpacity
                         style={styles.nextButton}
-                        onPress={() => alert("Siguiente paso")}
+                        onPress={() => router.push("/scheduleRepairV2")}
                     >
                         <Text style={styles.buttonTextBottom}>Siguiente</Text>
                     </TouchableOpacity>
