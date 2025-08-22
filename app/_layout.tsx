@@ -35,6 +35,10 @@ export default function RootLayout() {
           <Stack.Screen name="scheduleRepair" />
           <Stack.Screen name="scheduleRepairV2" />
           <Stack.Screen name="resume" />
+          <Stack.Screen name="categories" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="location" />
+          <Stack.Screen name="contact" />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

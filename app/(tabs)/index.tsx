@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MenuBar from "../../components/MenuBar";
 
 const reviews = [
   { id: 1, text: "Excelente servicio, muy rápido y confiable." },
@@ -140,25 +141,7 @@ export default function App(): React.ReactElement {
       </ScrollView>
 
       {/* MENÚ INFERIOR */}
-      <View style={styles.menuBar}>
-        <View style={styles.menuContainer}>
-          <TouchableOpacity onPress={() => alert("Home")}>
-            <Ionicons name="home-outline" size={32} color="#E51514" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert("Shop")}>
-            <Ionicons name="cart-outline" size={32} color="#E51514" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert("Profile")}>
-            <Ionicons name="person-outline" size={32} color="#E51514" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert("Store Location")}>
-            <Ionicons name="location-outline" size={32} color="#E51514" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert("Contact")}>
-            <Ionicons name="call-outline" size={32} color="#E51514" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <MenuBar activeTab="home" />
     </View>
   );
 }
