@@ -46,18 +46,18 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setAppointmentData({});
     try {
       await AsyncStorage.removeItem('appointmentData');
-      console.log('🗑️ Datos eliminados del contexto y AsyncStorage');
+      
     } catch (error) {
-      console.error('❌ Error eliminando datos:', error);
+      
     }
   };
 
   const saveToStorage = async () => {
     try {
       await AsyncStorage.setItem('appointmentData', JSON.stringify(appointmentData));
-      console.log('💾 Datos guardados en AsyncStorage');
+      
     } catch (error) {
-      console.error('❌ Error guardando datos:', error);
+      
     }
   };
 
@@ -67,10 +67,10 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (stored) {
         const parsed = JSON.parse(stored);
         setAppointmentData(parsed);
-        console.log('📱 Datos cargados desde AsyncStorage:', parsed);
+        
       }
     } catch (error) {
-      console.error('❌ Error cargando datos:', error);
+      
     }
   };
 

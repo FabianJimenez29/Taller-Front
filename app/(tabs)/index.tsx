@@ -1,372 +1,372 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import MenuBar from "../../components/MenuBar";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  SlideInLeft,
+  SlideInRight,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
-const reviews = [
-  { id: 1, text: "Excelente servicio, muy rápido y confiable." },
-  { id: 2, text: "Me solucionaron el problema en menos de un día." },
-  { id: 3, text: "Muy recomendado, atención al cliente de 10." },
-  { id: 4, text: "Precios justos y trato amable." },
-  { id: 5, text: "Volveré sin duda si tengo otro problema." },
-  { id: 6, text: "Volveré sin duda si tengo otro problema." },
-  { id: 7, text: "Volveré sin duda si tengo otro problema." },
-  { id: 8, text: "Volveré sin duda si tengo otro problema." },
+const Login = (): React.ReactElement => {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-];
+  // Animaciones
+  const logoScale = useSharedValue(0.8);
+  const logoRotation = useSharedValue(0);
+  const formSlide = useSharedValue(50);
+  const buttonScale = useSharedValue(1);
 
-const bannerImages = [
-  require("../../assets/images/banner.png"),
-  require("../../assets/images/banner2.png"),
-  require("../../assets/images/banner3.png"),
-  require("../../assets/images/banner4.png"),
-  require("../../assets/images/banner5.png"),
-  // Agrega más imágenes aquí
-];
-
-export default function App(): React.ReactElement {
-  const router = useRouter(); // <--- Agrega esta línea
-  const scrollRef = useRef<ScrollView>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const bannerWidth = 385;
-
-  // Auto-scroll effect: solo avanza a la derecha y vuelve al inicio
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % bannerImages.length;
-        scrollRef.current?.scrollTo({ x: nextIndex * bannerWidth, animated: true });
-        return nextIndex;
-      });
-    }, 4500);
+    // Animación de entrada del logo
+    logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
+    logoRotation.value = withSequence(
+      withTiming(10, { duration: 1000 }),
+      withTiming(-10, { duration: 1000 }),
+      withTiming(0, { duration: 1000 })
+    );
 
-    return () => clearInterval(interval);
-  }, []); // Solo se crea una vez
+    // Animación del formulario
+    formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
 
-  // Actualiza el índice al hacer scroll manual
-  const onScroll = (event: any) => {
-    const index = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
-    setCurrentIndex(index);
+    // Animación continua del logo
+    logoRotation.value = withRepeat(
+      withSequence(
+        withTiming(5, { duration: 2000 }),
+        withTiming(-5, { duration: 2000 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const logoAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: logoScale.value },
+      { rotate: `${logoRotation.value}deg` },
+    ],
+  }));
+
+  const formAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: formSlide.value }],
+  }));
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Por favor completa todos los campos");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simular proceso de login
+    setTimeout(() => {
+      setIsLoading(false);
+      if (email === "admin@test.com" && password === "123456") {
+        Alert.alert("✅ ¡Bienvenido!", "Inicio de sesión exitoso", [
+          {
+            
+            onPress: () => router.push("/main"),
+          },
+        ]);
+      } else {
+        Alert.alert("❌ Error", "Credenciales incorrectas. Intenta con:\nEmail: admin@test.com\nPassword: 123456");
+      }
+    }, 1500);
+  };
+
+  const handleButtonPress = () => {
+    buttonScale.value = withSequence(
+      withTiming(0.95, { duration: 100 }),
+      withTiming(1, { duration: 100 })
+    );
+    handleLogin();
   };
 
   return (
-    <View style={styles.container}>
-      {/* LOGO Y ICONO DE LENGUAJE */}
-      <View style={styles.logoRow}>
-        <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}>
-          <Ionicons name="language-outline" size={36} color="#000000ff" />
-        </TouchableOpacity>
-        <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
-            <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => router.push("/login")}>
-          <Ionicons name="log-out-outline" size={32} color="#E51514" />
-        </TouchableOpacity>
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* LOGO ANIMADO */}
+        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={styles.logo}
+          />
+          <Text style={styles.welcomeText}>¡Bienvenido de vuelta!</Text>
+          <Text style={styles.subtitleText}>Inicia sesión para continuar</Text>
+        </Animated.View>
 
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>Bienvenido</Text>
-        <Text style={styles.subtitle}>Fabian Jimenez</Text>
-      </View>
+        {/* FORMULARIO */}
+        <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+          <Animated.View entering={FadeInDown.delay(300).duration(800)}>
+            <Text style={styles.formTitle}>Iniciar Sesión</Text>
+          </Animated.View>
 
-      {/* BANNER DE PUBLICIDAD - Carrusel con marco redondeado y sombra externa */}
-      <View style={styles.bannerShadow}>
-        <View style={styles.bannerFrame}>
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            style={styles.bannerCarousel}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-          >
-            {bannerImages.map((img, idx) => (
-              <Image
-                key={idx}
-                source={img}
-                style={styles.banner}
+          {/* EMAIL */}
+          <Animated.View entering={SlideInRight.delay(400).duration(600)}>
+            <Text style={styles.label}>📧 Correo Electrónico</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="tu@email.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-            ))}
-          </ScrollView>
-          {/* Indicadores de página */}
-          <View style={styles.carouselDots}>
-            {bannerImages.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.dot,
-                  currentIndex === idx && styles.dotActive,
-                ]}
+            </View>
+          </Animated.View>
+
+          {/* PASSWORD */}
+          <Animated.View entering={SlideInLeft.delay(500).duration(600)}>
+            <Text style={styles.label}>🔒 Contraseña</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Tu contraseña"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
               />
-            ))}
-          </View>
-        </View>
-      </View>
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
 
-      {/* BOTONES PRINCIPALES */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/scheduleRepair")} // <--- Cambia aquí
-        >
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonText}>Schedule Repair</Text>
-            <Image source={require("../../assets/images/ScheduleRepairIcon.png")} style={styles.buttonIconSchedule} />
-          </View>
-        </TouchableOpacity>
+          {/* BOTÓN LOGIN */}
+          <Animated.View entering={FadeInUp.delay(600).duration(800)}>
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                { opacity: isLoading ? 0.7 : 1 },
+              ]}
+              onPress={handleButtonPress}
+              disabled={isLoading}
+            >
+              <Animated.View style={buttonAnimatedStyle}>
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? "⏳ Iniciando..." : "🚀 Iniciar Sesión"}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          </Animated.View>
 
-        <TouchableOpacity style={styles.button} onPress={() => alert("Ver estado de reparación")}>
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonText}>Repair Status</Text>
-            <Image source={require("../../assets/images/RepairStatusIcon.png")} style={styles.buttonIconRepair} />
-          </View>
-        </TouchableOpacity>
-      </View>
+          {/* ENLACES ADICIONALES */}
+          <Animated.View entering={FadeIn.delay(700).duration(800)}>
+            <View style={styles.linksContainer}>
+              <TouchableOpacity onPress={() => alert("Recuperar contraseña")}>
+                <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
 
-      {/* RESEÑAS */}
-      <ScrollView style={styles.reviews}>
-        <View style={styles.reviewsContent}>
-          <Text style={styles.reviewsTitle}>Reseñas</Text>
-          {reviews.map((review) => (
-            <Text key={review.id} style={styles.reviewText}>
-              {`"${review.text}"`}
-            </Text>
-          ))}
-        </View>
+          {/* BOTÓN REGISTER */}
+          <Animated.View entering={FadeInUp.delay(800).duration(800)}>
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>¿No tienes cuenta?</Text>
+              <TouchableOpacity onPress={() => router.push("/register")}>
+                <Text style={styles.registerLink}>Crear cuenta</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
+
+        {/* CREDENCIALES DE PRUEBA */}
+        <Animated.View entering={FadeIn.delay(900).duration(800)} style={styles.testCredentials}>
+          <Text style={styles.testTitle}>🧪 Credenciales de Prueba:</Text>
+          <Text style={styles.testText}>Email: admin@test.com</Text>
+          <Text style={styles.testText}>Password: 123456</Text>
+        </Animated.View>
       </ScrollView>
-
-      {/* MENÚ INFERIOR */}
-      <MenuBar activeTab="home" />
-    </View>
+    </KeyboardAvoidingView>
   );
-}
+};
+
+export default Login;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingBottom: 65, // Espacio reservado para el MenuBar
   },
-  logoRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 60,
-    marginBottom: 5,
-    position: "relative",
-  },
-  languageIcon: {
-    position: "absolute",
-    left: 20,
-    zIndex: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoCenter: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  scrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   logoContainer: {
-    marginBottom: 15,
+    alignItems: "center",
+    marginBottom: 40,
   },
   logo: {
-    marginTop: 10,
-    width: 150,
-    height: 50,
+    width: 180,
+    height: 60,
     resizeMode: "contain",
+    marginBottom: 20,
   },
-  title: {
+  welcomeText: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#E51514",
-  },
-  subtitle: {
-    fontSize: 24,
-    color: "#76B414",
-    fontWeight: "bold",
-  },
-  bannerShadow: {
-    alignSelf: "center",
-    borderRadius: 28,
-    // Sombra externa
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    elevation: 18,
-  },
-  bannerFrame: {
-    width: 385,
-    height: 180,
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#22222222",
-  },
-  bannerCarousel: {
-    width: 385,
-    height: 180,
-  },
-  banner: {
-    width: 385,
-    height: 180,
-    resizeMode: "cover",
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    height: 150,
-    marginVertical: 15,
-  },
-  button: {
-    backgroundColor: "#E51514",
-    padding: 20,
-    borderRadius: 15,
-    width: "40%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonContent: {
-    alignItems: "center",
-    justifyContent: "flex-start",
-    height: 140,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    marginBottom: 8,
     textAlign: "center",
-    marginTop: 10,
   },
-  buttonIconSchedule: {
-    width: 110,
-    height: 100,
-    resizeMode: "contain",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 1,
+  subtitleText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
-  buttonIconRepair: {
-    marginTop: 10,
-    width: 75,
-    height: 75,
-    resizeMode: "contain",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  reviews: {
-    width: "100%",
-    paddingHorizontal: 22,
-    marginBottom: 20, // Espacio adicional antes del MenuBar
-  },
-  reviewsContent: {
-    backgroundColor: "#E51514",
-    padding: 15,
-    width: 385,
+  formContainer: {
+    backgroundColor: "#f8f9fa",
     borderRadius: 20,
-    gap: 15,
-    minHeight: 160,
+    padding: 25,
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  reviewsTitle: {
+  formTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 25,
+    textAlign: "center",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#495057",
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#e9ecef",
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    minHeight: 55,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    paddingVertical: 15,
+  },
+  eyeIcon: {
+    padding: 5,
+  },
+  loginButton: {
+    backgroundColor: "#E51514",
+    borderRadius: 15,
+    paddingVertical: 18,
+    marginBottom: 20,
+    shadowColor: "#E51514",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  loginButtonText: {
+    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#fff",
     textAlign: "center",
   },
-  reviewText: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: "#fff",
-  },
-  menuBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    paddingVertical: 17,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-  },
-  textContainer: {
+  linksContainer: {
     alignItems: "center",
     marginBottom: 20,
   },
-  menuContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginBottom: 15,
+  linkText: {
+    color: "#76B414",
+    fontSize: 16,
+    fontWeight: "500",
+    textDecorationLine: "underline",
   },
-  profileCircle: {
-    position: "absolute",
-    right: 20,
-    zIndex: 2,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  carouselDots: {
-    position: "absolute",
-    bottom: 0, // más abajo del carrusel
-    left: 0,
-    right: 0,
+  registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 8,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#76B414",
-    marginHorizontal: 6,
-    borderWidth: 2,
-    borderColor: "transparent", // Agrega esto
+  registerText: {
+    color: "#666",
+    fontSize: 16,
   },
-  dotActive: {
-    backgroundColor: "#E51514",
-    borderWidth: 2,
-    width: 15,
-    borderColor: "transparent", // Agrega esto
+  registerLink: {
+    color: "#76B414",
+    fontSize: 16,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
   },
-  logoutButton: {
-    position: "absolute",
-    right: 20,
-    zIndex: 2,
+  testCredentials: {
+    backgroundColor: "#e3f2fd",
+    borderRadius: 15,
+    padding: 20,
+    alignItems: "center",
+  },
+  testTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1976d2",
+    marginBottom: 10,
+  },
+  testText: {
+    fontSize: 14,
+    color: "#1976d2",
+    marginBottom: 5,
   },
 });
-

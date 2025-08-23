@@ -29,8 +29,8 @@ const Categories = () => {
       {/* HEADER */}
       <View style={styles.logoRow}>
         {/* Icono de idioma */}
-        <TouchableOpacity 
-          style={styles.languageIcon} 
+        <TouchableOpacity
+          style={styles.languageIcon}
           onPress={() => router.push({
             pathname: "/language",
             params: { previousScreen: "/categories" }
@@ -40,9 +40,9 @@ const Categories = () => {
         </TouchableOpacity>
 
         {/* Logo centrado */}
-        <TouchableOpacity style={styles.logoContainer} onPress={() => router.back()}>
-            <Image source={require("../assets/images/logo.png")} style={styles.logo} />
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
+          <Image source={require("../assets/images/logo.png")} style={styles.logo} />
+        </TouchableOpacity>
       </View>
 
       {/* TÍTULO */}
@@ -59,13 +59,13 @@ const Categories = () => {
               activeOpacity={0.8}
             >
               {/* Imagen de la categoría */}
-                              <View style={styles.imageContainer}>
-                  <Ionicons name={category.icon as any} size={40} color="#000000" />
-                </View>
-              
+              <View style={styles.imageContainer}>
+                <Image source={category.image} style={styles.image} />
+              </View>
+
               {/* Nombre de la categoría */}
               <Text style={styles.categoryName}>{category.name}</Text>
-              
+
               {/* Descripción */}
               <Text style={styles.categoryDescription}>{category.description}</Text>
             </TouchableOpacity>
@@ -141,6 +141,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 40,
   },
+  imageContainer: {
+    width: 80,
+    height: 80,
+    marginBottom: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain", // mantiene proporción dentro del recuadro
+  },
   categoryCard: {
     width: "30%", // 3 columnas con espacio entre ellas
     backgroundColor: "#fff",
@@ -159,13 +172,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#f0f0f0",
   },
-  imageContainer: {
-    width: "100%",
-    height: 80,
-    marginBottom: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  
   categoryImage: {
     width: "100%",
     height: "100%",
@@ -173,7 +180,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   categoryName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#000000",
     textAlign: "center",

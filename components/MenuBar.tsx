@@ -46,7 +46,7 @@ const MenuBar: React.FC<MenuBarProps> = ({
       switch (tab) {
           case 'home':
             router.push({
-              pathname: "/",
+              pathname: "/main",
               params: { direction }
             });
             break;

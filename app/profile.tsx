@@ -2,13 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Image,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Linking,
+  View
 } from "react-native";
 import MenuBar from "../components/MenuBar";
 
@@ -26,7 +23,7 @@ const ProfileScreen = () => {
 
   const handleLogout = () => {
     // Aquí iría la lógica para cerrar sesión
-    router.push("/login");
+    router.push("/");
   };
 
   return (
@@ -50,32 +47,26 @@ const ProfileScreen = () => {
           <Text style={styles.infoLabel}>Nombre:</Text>
           <Text style={styles.infoValue}>Fabian Jimenez Sandoval</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>N° Cédula:</Text>
           <Text style={styles.infoValue}>1-2345-6789</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>N° Teléfono:</Text>
           <Text style={styles.infoValue}>+506 1234-5678</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Correo Electrónico:</Text>
           <Text style={styles.infoValue}>abcdef@gmail.com</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Provincia:</Text>
           <Text style={styles.infoValue}>Guanacaste</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Cantón:</Text>
           <Text style={styles.infoValue}>Santa Cruz</Text>
         </View>
-        
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Distrito:</Text>
           <Text style={styles.infoValue}>Cartagena</Text>
@@ -94,7 +85,6 @@ const ProfileScreen = () => {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Cerrar Sesión</Text>
       </TouchableOpacity>
-
       {/* MENÚ INFERIOR */}
       <MenuBar activeTab="profile" />
     </View>
@@ -139,15 +129,16 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: "#E51514",
-    borderRadius: 20,
-    padding: 25,
-    marginHorizontal: 20,
-    marginBottom: 25,
+    borderRadius: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    marginHorizontal: 48,
+    marginBottom: 6,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1,
+    elevation: 1,
   },
   infoRow: {
     marginBottom: 12,

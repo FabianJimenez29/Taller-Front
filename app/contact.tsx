@@ -2,14 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Image,
-    Linking,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import MenuBar from "../components/MenuBar";
 
@@ -50,7 +50,7 @@ const ContactScreen = () => {
         </TouchableOpacity>
 
         {/* Logo centrado */}
-        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
+        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
           <Image source={require("../assets/images/logo.png")} style={styles.logo} />
         </TouchableOpacity>
       </View>

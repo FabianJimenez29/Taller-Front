@@ -3,11 +3,11 @@ import { sucursales } from '@/constants/Sucursales';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function LocationScreen() {
   const router = useRouter();
-  
+
 
   const handleGoBack = () => {
     router.back();
@@ -31,9 +31,22 @@ export default function LocationScreen() {
     }
   };
 
+  
+
   const callBranch = (telefono: string) => {
-    // Realiza una llamada telefónica
-    Linking.openURL(`tel:${telefono}`).catch(err => console.error('Error al realizar llamada:', err));
+    
+    const cleanNumber = telefono.replace(/[\s-()]/g, '');
+
+    // Verificar que el dispositivo pueda realizar llamadas
+    Linking.canOpenURL(`tel:${cleanNumber}`)
+      .then(supported => {
+        if (!supported) {
+          Alert.alert("Error", "Este dispositivo no puede realizar llamadas");
+        } else {
+          return Linking.openURL(`tel:${cleanNumber}`);
+        }
+      })
+      .catch(err => console.error("Error al realizar llamada:", err));
   };
 
   return (
@@ -41,8 +54,8 @@ export default function LocationScreen() {
       {/* HEADER */}
       <View style={styles.logoRow}>
         {/* Icono de idioma */}
-        <TouchableOpacity 
-          style={styles.languageIcon} 
+        <TouchableOpacity
+          style={styles.languageIcon}
           onPress={() => router.push({
             pathname: "/language",
             params: { previousScreen: "/location" }
@@ -52,7 +65,7 @@ export default function LocationScreen() {
         </TouchableOpacity>
 
         {/* Logo centrado */}
-        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
+        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
           <Image source={require("../assets/images/logo.png")} style={styles.logo} />
         </TouchableOpacity>
       </View>
@@ -69,19 +82,19 @@ export default function LocationScreen() {
               <Text style={styles.branchName}>{sucursal.nombre}</Text>
             </View>
             <View style={styles.branchActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => openMaps(sucursal.ubicacion)}
               >
-                <Ionicons name="map" size={24} color="#4285F4" />
+                <Image source={require("../assets/images/maps.png")} style={styles.Icons} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => openWaze(sucursal.ubicacion)}
               >
-                <Ionicons name="navigate" size={24} color="#76B414" />
+                <Image source={require("../assets/images/waze-icon.png")} style={styles.Icons} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => callBranch(sucursal.telefono)}
               >
@@ -99,6 +112,12 @@ export default function LocationScreen() {
 }
 
 const styles = StyleSheet.create({
+  Icons: {
+    
+      width: 24,
+      height: 24,
+    
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',

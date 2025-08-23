@@ -6,6 +6,7 @@ import {
     Alert,
     Image,
     Modal,
+    Platform,
     StyleSheet,
     Text,
     TextInput,
@@ -15,11 +16,10 @@ import {
 import { useAppointment } from "../contexts/AppointmentContext";
 
 const tiposPlaca = [
-    { label: "Seleccione Una Opción", value: "" },
     { label: "Particular", value: "particular" },
     { label: "Comercial", value: "comercial" },
     { label: "Transporte Público", value: "publico" },
-];
+]; 
 
 const VehicleInfo = (): React.ReactElement => {
     const router = useRouter();
@@ -31,6 +31,7 @@ const VehicleInfo = (): React.ReactElement => {
     const [modelo, setModelo] = useState(appointmentData.modelo || "");
     const [problema, setProblema] = useState(appointmentData.problema || "");
     const [modalPlaca, setModalPlaca] = useState(false);
+    const [tempTipoPlaca, setTempTipoPlaca] = useState(""); // Estado temporal para el picker
 
     // Guardar datos en el contexto cuando cambien
     useEffect(() => {
@@ -47,6 +48,28 @@ const VehicleInfo = (): React.ReactElement => {
             setProblema("");
         }
     }, [appointmentData]);
+
+    // Función para abrir el modal y establecer el valor temporal
+    const openModalPlaca = () => {
+        setTempTipoPlaca(tipoPlaca || "");
+        setModalPlaca(true);
+    };
+
+    // Función para confirmar la selección
+    const confirmarSeleccion = () => {
+        if (tempTipoPlaca && tempTipoPlaca !== "") {
+            setTipoPlaca(tempTipoPlaca);
+            setModalPlaca(false);
+        } else {
+            Alert.alert("Atención", "Por favor seleccione una opción válida");
+        }
+    };
+
+    // Función para cancelar la selección
+    const cancelarSeleccion = () => {
+        setTempTipoPlaca("");
+        setModalPlaca(false);
+    };
 
     const fetchVehicleInfo = async () => {
         if (!numeroPlaca) {
@@ -131,12 +154,12 @@ const VehicleInfo = (): React.ReactElement => {
                 <View style={styles.logoCenter}>
                     <TouchableOpacity
                         style={styles.logoContainer}
-                        onPress={() => router.push("/")}
+                        onPress={() => router.push("/main")}
                     >
-                                            <Image
-                        source={require("../assets/images/logo.png")}
-                        style={styles.logo}
-                    />
+                        <Image
+                            source={require("../assets/images/logo.png")}
+                            style={styles.logo}
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -150,28 +173,62 @@ const VehicleInfo = (): React.ReactElement => {
                 <Text style={styles.label}>Tipo De Placa</Text>
                 <TouchableOpacity
                     style={styles.inputField}
-                    onPress={() => setModalPlaca(true)}
+                    onPress={openModalPlaca}
                 >
                     <Text style={{ color: tipoPlaca ? "#222" : "#aaa" }}>
                         {tipoPlaca
                             ? tiposPlaca.find((t) => t.value === tipoPlaca)?.label
-                            : "Seleccione Una Opción"}
+                            : "Seleccione una opción"}
                     </Text>
                 </TouchableOpacity>
+
+                {/* Modal mejorado para Tipo de Placa */}
                 <Modal visible={modalPlaca} transparent animationType="slide">
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
-                            <Picker
-                                selectedValue={tipoPlaca}
-                                onValueChange={(value) => {
-                                    setTipoPlaca(value);
-                                    setModalPlaca(false);
-                                }}
-                            >
-                                {tiposPlaca.map((t) => (
-                                    <Picker.Item key={t.value} label={t.label} value={t.value} />
-                                ))}
-                            </Picker>
+                            {/* Título del modal */}
+                            <Text style={styles.modalTitle}>Seleccione el tipo de placa</Text>
+                            
+                            {/* Picker con estilos mejorados */}
+                            <View style={styles.pickerContainer}>
+                                <Picker
+                                    selectedValue={tempTipoPlaca}
+                                    onValueChange={(value) => setTempTipoPlaca(value)}
+                                    style={styles.picker}
+                                    itemStyle={styles.pickerItem} // Solo funciona en iOS
+                                >
+                                    <Picker.Item 
+                                        label="-- Seleccione una opción --" 
+                                        value="" 
+                                        color="#999" 
+                                    />
+                                    {tiposPlaca.map((t) => (
+                                        <Picker.Item 
+                                            key={t.value} 
+                                            label={t.label} 
+                                            value={t.value}
+                                            color="#000"
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+                            
+                            {/* Botones de acción */}
+                            <View style={styles.modalButtons}>
+                                <TouchableOpacity 
+                                    style={styles.cancelBtn}
+                                    onPress={cancelarSeleccion}
+                                >
+                                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    style={styles.confirmBtn}
+                                    onPress={confirmarSeleccion}
+                                >
+                                    <Text style={styles.confirmBtnText}>Confirmar</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </Modal>
@@ -219,7 +276,15 @@ const VehicleInfo = (): React.ReactElement => {
             <View style={styles.bottomButtons}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.back()}
+                    onPress={() => {
+                        setTipoPlaca("");
+                        setNumeroPlaca("");
+                        setMarca("");
+                        setModelo("");
+                        setProblema("");
+                        setTempTipoPlaca("");
+                        router.back();
+                    }}
                 >
                     <Text style={styles.buttonTextBottom}>Volver</Text>
                 </TouchableOpacity>
@@ -316,13 +381,87 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         justifyContent: "flex-end",
-        backgroundColor: "rgba(0,0,0,0.3)",
+        backgroundColor: "rgba(0,0,0,0.5)",
     },
     modalContent: {
-        backgroundColor: "#ffffffff",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        padding: 50,
+        backgroundColor: "#ffffff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 40,
+        maxHeight: '50%',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 20,
+        color: "#333",
+    },
+    pickerContainer: {
+        backgroundColor: "#f8f9fa",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#e0e0e0",
+        marginBottom: 20,
+        ...Platform.select({
+            ios: {
+                height: 180, // Altura específica para iOS
+            },
+            android: {
+                height: 50,
+            },
+        }),
+    },
+    picker: {
+        width: "100%",
+        ...Platform.select({
+            ios: {
+                height: 180,
+            },
+            android: {
+                height: 50,
+                color: "#000",
+            },
+        }),
+    },
+    pickerItem: {
+        // Solo funciona en iOS
+        fontSize: 16,
+        height: 180,
+        color: "#000",
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 15,
+    },
+    cancelBtn: {
+        backgroundColor: '#E51514',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 10,
+        flex: 1,
+    },
+    cancelBtnText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    confirmBtn: {
+        backgroundColor: '#76B414',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 10,
+        flex: 1,
+    },
+    confirmBtnText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
     bottomButtons: {
         flexDirection: "row",
