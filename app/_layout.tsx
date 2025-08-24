@@ -44,6 +44,7 @@ function CustomStack() {
       <Stack.Screen name="location" />
       <Stack.Screen name="contact" />
       <Stack.Screen name="language" />
+      <Stack.Screen name="admin" />
     </Stack>
   );
 }

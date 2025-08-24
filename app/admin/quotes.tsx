@@ -32,6 +32,7 @@ type Quote = {
   status?: string;
   tecnico?: string;
   procesoCompletado?: boolean;
+  observaciones?: string;
 };
 
 const QuotesAdmin = () => {
@@ -141,6 +142,13 @@ const QuotesAdmin = () => {
           )}
         </View>
         
+        {item.observaciones && (
+          <View style={styles.observacionesContainer}>
+            <Text style={styles.observacionesLabel}>Observaciones:</Text>
+            <Text style={styles.observacionesText}>{item.observaciones}</Text>
+          </View>
+        )}
+        
         <TouchableOpacity
           style={styles.procesarButton}
           onPress={() => onProcesar(item.id)}
@@ -154,9 +162,9 @@ const QuotesAdmin = () => {
   });
 
   const handleProcesarCita = (id: number | string) => {
-    // En Expo Router, usamos un objeto con los parámetros
+    // Usamos la ruta dinámica con el id como parámetro
     router.push({
-      pathname: "/admin/procesarCita",
+      pathname: '/admin/procesarCita/[id]',
       params: { id: id.toString() }
     });
   };
@@ -258,6 +266,25 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   tecnicoText: {
+    fontSize: 14,
+    color: "#34495e",
+    fontStyle: "italic",
+  },
+  observacionesContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: "#76B414",
+  },
+  observacionesLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 4,
+  },
+  observacionesText: {
     fontSize: 14,
     color: "#34495e",
     fontStyle: "italic",

@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { serviciosProcesos, ProcesoPaso } from '../../../constants/ServiciosProcesos';
+import ChecklistServicio from '../../../components/ChecklistServicioSimple';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -29,24 +30,7 @@ type ProcesoCita = {
   tecnico?: string;
 };
 
-const ChecklistItem = ({ paso, onToggle }: { 
-  paso: ProcesoPaso, 
-  onToggle: (id: string, completed: boolean) => void 
-}) => {
-  return (
-    <TouchableOpacity 
-      style={styles.checklistItem} 
-      onPress={() => onToggle(paso.id, !paso.completado)}
-    >
-      <View style={[styles.checkbox, paso.completado ? styles.checkboxChecked : {}]}>
-        {paso.completado && <Ionicons name="checkmark" size={16} color="#fff" />}
-      </View>
-      <Text style={[styles.checklistText, paso.completado ? styles.checklistTextCompleted : {}]}>
-        {paso.descripcion}
-      </Text>
-    </TouchableOpacity>
-  );
-};
+// Ya no necesitamos este componente, usaremos ChecklistServicio
 
 export default function ProcesarCitaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,6 +38,7 @@ export default function ProcesarCitaScreen() {
   const [cita, setCita] = useState<ProcesoCita | null>(null);
   const [loading, setLoading] = useState(true);
   const [nombreTecnico, setNombreTecnico] = useState('');
+  const [observaciones, setObservaciones] = useState('');
   const [savingData, setSavingData] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [pasosProceso, setPasosProceso] = useState<ProcesoPaso[]>([]);
@@ -157,42 +142,50 @@ export default function ProcesarCitaScreen() {
 
     setSavingData(true);
     try {
-      const checklistData = {
-        citaId: id,
-        servicioId: cita?.servicio,
-        nombreServicio: cita?.servicio,
-        nombreTecnico,
-        pasos: pasosProceso,
-        fechaActualizacion: new Date().toISOString(),
-        completado: pasosProceso.every(paso => paso.completado)
-      };
+      // Determinar si todos los pasos están completados
+      const todosPasosCompletados = pasosProceso.every(paso => paso.completado);
+      
+      console.log('Enviando datos al servidor:', {
+        url: `${BACKEND_URL}/quotes/${id}`,
+        tecnico: nombreTecnico,
+        status: todosPasosCompletados ? 'Completado' : 'En proceso'
+      });
       
       const response = await fetch(`${BACKEND_URL}/quotes/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
           tecnico: nombreTecnico,
-          status: checklistData.completado ? 'Completado' : 'En progreso',
-          checklist_data: checklistData
+          status: todosPasosCompletados ? 'Completado' : 'En proceso',
+          observaciones: observaciones.trim() || undefined
         }),
       });
-
+      
+      const responseText = await response.text();
+      console.log('Respuesta del servidor:', response.status, responseText);
+      
       if (response.ok) {
         Alert.alert(
           'Éxito', 
-          checklistData.completado
+          todosPasosCompletados
             ? 'Servicio completado exitosamente'
             : 'Progreso guardado exitosamente',
           [{ text: 'OK', onPress: () => router.back() }]
         );
       } else {
-        throw new Error('Error al guardar cambios');
+        throw new Error(`Error al guardar cambios: ${response.status} - ${responseText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar progreso:', error);
-      Alert.alert('Error', 'No se pudo guardar el progreso');
+      
+      // Mostrar mensaje de error más detallado
+      Alert.alert(
+        'Error', 
+        `No se pudo actualizar el estado de la cita: ${error.message || 'Error desconocido'}. Verifica tu conexión a internet e intenta nuevamente.`
+      );
     } finally {
       setSavingData(false);
     }
@@ -204,14 +197,21 @@ export default function ProcesarCitaScreen() {
     if (pasosIncompletos.length > 0) {
       Alert.alert(
         'Pasos incompletos',
-        `Hay ${pasosIncompletos.length} pasos sin completar. ¿Desea finalizar de todas formas?`,
+        `Hay ${pasosIncompletos.length} pasos sin completar. Si finaliza ahora, la cita se guardará como "En proceso". ¿Desea continuar?`,
         [
           { text: 'Cancelar', style: 'cancel' },
-          { text: 'Finalizar', onPress: handleSaveProgress }
+          { text: 'Guardar progreso', onPress: handleSaveProgress }
         ]
       );
     } else {
-      handleSaveProgress();
+      Alert.alert(
+        'Finalizar servicio',
+        '¿Está seguro que desea marcar este servicio como completado?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Completar servicio', onPress: handleSaveProgress }
+        ]
+      );
     }
   };
 
@@ -310,24 +310,27 @@ export default function ProcesarCitaScreen() {
             value={nombreTecnico}
             onChangeText={setNombreTecnico}
           />
+          
+          <Text style={[styles.sectionTitle, {marginTop: 15}]}>Observaciones</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Ingrese observaciones sobre el servicio (opcional)"
+            value={observaciones}
+            onChangeText={setObservaciones}
+            multiline={true}
+            numberOfLines={4}
+          />
         </View>
 
         {/* Checklist de pasos del servicio */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Pasos del servicio</Text>
           {pasosProceso.length > 0 ? (
-            <View style={styles.checklistContainer}>
-              {pasosProceso.map(paso => (
-                <ChecklistItem
-                  key={paso.id}
-                  paso={{
-                    ...paso,
-                    completado: paso.completado || completedSteps.includes(paso.id)
-                  }}
-                  onToggle={handleStepToggle}
-                />
-              ))}
-            </View>
+            <ChecklistServicio
+              procesos={pasosProceso}
+              onToggleStep={handleStepToggle}
+              completedSteps={completedSteps}
+            />
           ) : (
             <Text style={styles.noProcessText}>No hay pasos definidos para este servicio</Text>
           )}
@@ -450,37 +453,12 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
   },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
   checklistContainer: {
     marginTop: 5,
-  },
-  checklistItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 2,
-    borderColor: '#76B414',
-    borderRadius: 4,
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#76B414',
-  },
-  checklistText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-  },
-  checklistTextCompleted: {
-    textDecorationLine: 'line-through',
-    color: '#888',
   },
   buttonsContainer: {
     flexDirection: 'row',

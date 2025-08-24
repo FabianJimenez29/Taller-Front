@@ -14,13 +14,16 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ProcesoPaso, ProcesoServicio, getProcesosServicio, mapServicioIdToProcesosId } from '../constants/ServiciosProcesos';
+import { ProcesoPaso, ProcesoServicio, getProcesosServicio, mapServicioIdToProcesosId, serviciosProcesos } from '../constants/ServiciosProcesos';
 
 interface ChecklistServicioProps {
-  citaId: number;
-  servicioId: string;
-  onComplete: () => void;
-  onCancel: () => void;
+  citaId?: number | string;
+  servicioId?: string;
+  onComplete?: () => void;
+  onCancel?: () => void;
+  procesos?: ProcesoPaso[];
+  onToggleStep?: (id: string, completed: boolean) => void;
+  completedSteps?: string[];
 }
 
 const ChecklistServicio = ({ citaId, servicioId, onComplete, onCancel }: ChecklistServicioProps) => {
