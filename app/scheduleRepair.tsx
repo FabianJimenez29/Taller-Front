@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
 import { servicios } from "../constants/Servicios";
 import { sucursales } from "../constants/Sucursales";
 import { useAppointment } from "../contexts/AppointmentContext";
@@ -24,7 +24,8 @@ function getFechasCita() {
   return fechas;
 }
 
-const horasCita = [
+// Lista completa de horarios (ahora solo se usa como referencia)
+const todasLasHoras = [
   { label: "08:00 AM", value: "08:00" },
   { label: "09:00 AM", value: "09:00" },
   { label: "10:00 AM", value: "10:00" },
@@ -55,6 +56,10 @@ const ScheduleRepair = (): React.ReactElement => {
   const [modalServicio, setModalServicio] = useState(false);
   const [modalFecha, setModalFecha] = useState(false);
   const [modalHora, setModalHora] = useState(false);
+  
+  // Estado para las horas disponibles y cargando
+  const [horasDisponibles, setHorasDisponibles] = useState(todasLasHoras);
+  const [cargandoHoras, setCargandoHoras] = useState(false);
 
   // Guardar datos en el contexto cuando cambien
   useEffect(() => {
@@ -70,6 +75,60 @@ const ScheduleRepair = (): React.ReactElement => {
       setHora("");
     }
   }, [appointmentData]);
+  
+  // Efecto para cargar las horas disponibles cuando se selecciona una fecha o una sucursal
+  useEffect(() => {
+    if (fecha) {
+      cargarHorasDisponibles();
+    }
+  }, [fecha, sucursal]);
+  
+  // Función para cargar horas disponibles
+  const cargarHorasDisponibles = async () => {
+    if (!fecha) return;
+    
+    setCargandoHoras(true);
+    setHorasDisponibles([]);
+    
+    try {
+      // Construir la URL para la consulta
+      let url = `${process.env.EXPO_PUBLIC_BACKEND_URL}/availability?fecha=${fecha}`;
+      if (sucursal) {
+        url += `&sucursal=${encodeURIComponent(
+          sucursales.find(s => s.id === sucursal)?.nombre || ""
+        )}`;
+      }
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Error al cargar horas disponibles");
+      }
+      
+      setHorasDisponibles(data.horasDisponibles || []);
+      
+      // Si la hora seleccionada ya no está disponible, la limpiamos
+      if (hora && data.horasOcupadas && data.horasOcupadas.includes(hora)) {
+        setHora("");
+        Alert.alert(
+          "⚠️ Horario no disponible", 
+          "La hora que tenías seleccionada ya no está disponible. Por favor, elige otra hora.",
+          [{ text: "Entendido" }]
+        );
+      }
+    } catch (error) {
+      // Si hay error, mostramos todas las horas
+      setHorasDisponibles(todasLasHoras);
+      Alert.alert(
+        "⚠️ Error", 
+        "No se pudo obtener la disponibilidad de horarios. Se mostrarán todos los horarios disponibles.",
+        [{ text: "Entendido" }]
+      );
+    } finally {
+      setCargandoHoras(false);
+    }
+  };
 
   // Funciones para abrir modals
   const openSucursalModal = () => {
@@ -89,6 +148,20 @@ const ScheduleRepair = (): React.ReactElement => {
 
   const openHoraModal = () => {
     setTempHora(hora || "");
+    
+    // Si tenemos fecha, asegurarnos de tener las horas actualizadas
+    if (fecha) {
+      cargarHorasDisponibles();
+    } else {
+      // Si no hay fecha, mostrar alerta
+      Alert.alert(
+        "⚠️ Selecciona una fecha primero", 
+        "Debes seleccionar una fecha antes de elegir una hora.",
+        [{ text: "Entendido" }]
+      );
+      return;
+    }
+    
     setModalHora(true);
   };
 
@@ -333,7 +406,7 @@ const ScheduleRepair = (): React.ReactElement => {
         >
           <Text style={{ color: hora ? "#222" : "#aaa" }}>
             {hora
-              ? horasCita.find(h => h.value === hora)?.label
+              ? todasLasHoras.find(h => h.value === hora)?.label
               : "Seleccione una hora"}
           </Text>
         </TouchableOpacity>
@@ -341,28 +414,46 @@ const ScheduleRepair = (): React.ReactElement => {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Seleccione una hora</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={tempHora}
-                  onValueChange={(value) => setTempHora(value)}
-                  style={styles.picker}
-                  itemStyle={styles.pickerItem}
-                >
-                  <Picker.Item 
-                    label="-- Seleccione una opción --" 
-                    value="" 
-                    color="#999" 
-                  />
-                  {horasCita.map((h) => (
+              
+              {cargandoHoras ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#76B414" />
+                  <Text style={styles.loadingText}>Cargando horarios disponibles...</Text>
+                </View>
+              ) : horasDisponibles.length === 0 ? (
+                <View style={styles.noHoursContainer}>
+                  <Text style={styles.noHoursText}>
+                    No hay horas disponibles para esta fecha y sucursal.
+                  </Text>
+                  <Text style={styles.noHoursSubtext}>
+                    Intenta seleccionar otra fecha o sucursal.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={tempHora}
+                    onValueChange={(value) => setTempHora(value)}
+                    style={styles.picker}
+                    itemStyle={styles.pickerItem}
+                  >
                     <Picker.Item 
-                      key={h.value} 
-                      label={h.label} 
-                      value={h.value}
-                      color="#000"
+                      label="-- Seleccione una opción --" 
+                      value="" 
+                      color="#999" 
                     />
-                  ))}
-                </Picker>
-              </View>
+                    {horasDisponibles.map((h) => (
+                      <Picker.Item 
+                        key={h.value} 
+                        label={h.label} 
+                        value={h.value}
+                        color="#000"
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              )}
+              
               <View style={styles.buttonRow}>
                 <TouchableOpacity 
                   style={styles.cancelBtn}
@@ -372,9 +463,12 @@ const ScheduleRepair = (): React.ReactElement => {
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
-                  style={[styles.confirmBtn, (!tempHora || tempHora === "") && styles.disabledBtn]}
+                  style={[
+                    styles.confirmBtn, 
+                    (cargandoHoras || horasDisponibles.length === 0 || !tempHora || tempHora === "") && styles.disabledBtn
+                  ]}
                   onPress={confirmHora}
-                  disabled={!tempHora || tempHora === ""}
+                  disabled={cargandoHoras || horasDisponibles.length === 0 || !tempHora || tempHora === ""}
                 >
                   <Text style={styles.confirmBtnText}>Confirmar</Text>
                 </TouchableOpacity>
@@ -595,6 +689,40 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+    textAlign: "center",
+  },
+  // Nuevos estilos para estados de carga
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    height: 180,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+  noHoursContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    height: 180,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  noHoursText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#e74c3c",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  noHoursSubtext: {
+    fontSize: 14,
+    color: "#666",
     textAlign: "center",
   },
 });
