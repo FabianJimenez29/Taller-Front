@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { servicios } from "../constants/Servicios";
 import { sucursales } from "../constants/Sucursales";
 import { useAppointment } from "../contexts/AppointmentContext";
@@ -18,7 +19,7 @@ const Resume = (): React.ReactElement => {
   const router = useRouter();
   const { appointmentData, clearAppointmentData } = useAppointment();
 
-  const handleConfirmAppointment = () => {
+  const handleConfirmAppointment = async () => {
     Alert.alert(
       "✅ Confirmar Cita",
       "¿Estás seguro de que quieres confirmar esta cita de reparación?",
@@ -29,20 +30,57 @@ const Resume = (): React.ReactElement => {
         },
         {
           text: "Confirmar",
-          onPress: () => {
-            Alert.alert(
-              "🎉 ¡Cita Confirmada!",
-              "Tu cita ha sido confirmada exitosamente. Recibirás una notificación con los detalles.",
-              [
-                {
-                  text: "OK",
-                  onPress: () => {
-                    clearAppointmentData();
-                    router.push("/");
-                  }
-                }
-              ]
-            );
+          onPress: async () => {
+            try {
+              const userStr = await AsyncStorage.getItem("user");
+              const user = userStr ? JSON.parse(userStr) : {};
+              
+              // Verificar si tenemos todos los datos del usuario
+              if (!verificarDatosUsuario(user)) {
+                Alert.alert(
+                  "⚠️ Datos incompletos", 
+                  "No se encontraron todos los datos personales necesarios. Por favor, inicie sesión nuevamente o complete su registro.",
+                  [{ text: "Entendido" }]
+                );
+                return;
+              }
+              
+              // Obtener el nombre de la sucursal a partir del ID
+              const sucursalNombre = appointmentData.sucursal ? 
+                sucursales.find(s => s.id === appointmentData.sucursal)?.nombre || "" : "";
+              
+              const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/quotes`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  clientName: user.fullName || user.full_name || "",
+                  clientEmail: user.email || "",
+                  clientPhone: user.phone || "",
+                  clientProvincia: user.provincia || "",
+                  clientCanton: user.canton || "",
+                  clientDistrito: user.distrito || "",
+                  sucursal: sucursalNombre,
+                  servicio: getServicioName(appointmentData.servicio || ""),
+                  fecha: appointmentData.fecha || "",
+                  hora: appointmentData.hora || "",
+                  tipo_placa: appointmentData.tipoPlaca || "",
+                  numero_placa: appointmentData.numeroPlaca || "",
+                  marca: appointmentData.marca || "",
+                  modelo: appointmentData.modelo || "",
+                  problema: appointmentData.problema || "",
+                }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                Alert.alert("🎉 ¡Cita Confirmada!", "Tu cita ha sido guardada y agendada.");
+                clearAppointmentData();
+                router.push("/main");
+              } else {
+                Alert.alert("Error", data.error || "No se pudo guardar la cita.");
+              }
+            } catch (err) {
+              Alert.alert("Error", "No se pudo conectar con el servidor.");
+            }
           }
         }
       ]
@@ -107,6 +145,17 @@ const Resume = (): React.ReactElement => {
 
   const getServicioName = (id: string) => {
     return servicios.find(s => s.id === id)?.nombre || id;
+  };
+  
+  // Función para verificar que todos los datos del usuario están disponibles
+  const verificarDatosUsuario = (user: any): boolean => {
+    if (!user) return false;
+    return !!(user.fullName || user.full_name) && 
+           !!user.email && 
+           !!user.phone && 
+           !!user.provincia && 
+           !!user.canton && 
+           !!user.distrito;
   };
 
   const getTipoPlacaName = (value: string) => {

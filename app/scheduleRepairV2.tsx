@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { PLACA_API_URL, PLACA_API_USERNAME } from "../constants/PlacaApi";
 import { useAppointment } from "../contexts/AppointmentContext";
 
 const tiposPlaca = [
@@ -78,8 +79,9 @@ const VehicleInfo = (): React.ReactElement => {
         }
 
         try {
-            const username = "Jotix"; // tu usuario en placa.co.cr
-            const url = `https://www.placa.co.cr/api/reg.asmx/CheckCostaRica?RegistrationNumber=${numeroPlaca}&username=${username}`;
+            const username = PLACA_API_USERNAME;
+            const baseUrl = PLACA_API_URL;
+            const url = `${baseUrl}?RegistrationNumber=${numeroPlaca}&username=${username}`;
 
             console.log("🔍 Buscando placa:", numeroPlaca);
             console.log("📡 URL:", url);

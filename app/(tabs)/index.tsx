@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import Constants from 'expo-constants';
 import {
   Alert,
   Image,
@@ -13,7 +14,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Animated,
+{
   FadeIn,
   FadeInDown,
   FadeInUp,
@@ -40,19 +43,16 @@ const Login = (): React.ReactElement => {
   const formSlide = useSharedValue(50);
   const buttonScale = useSharedValue(1);
 
+  const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
   useEffect(() => {
-    // Animación de entrada del logo
     logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
     logoRotation.value = withSequence(
       withTiming(10, { duration: 1000 }),
       withTiming(-10, { duration: 1000 }),
       withTiming(0, { duration: 1000 })
     );
-
-    // Animación del formulario
     formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
-
-    // Animación continua del logo
     logoRotation.value = withRepeat(
       withSequence(
         withTiming(5, { duration: 2000 }),
@@ -64,42 +64,67 @@ const Login = (): React.ReactElement => {
   }, []);
 
   const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: logoScale.value },
-      { rotate: `${logoRotation.value}deg` },
-    ],
+    transform: [{ scale: logoScale.value }, { rotate: `${logoRotation.value}deg` }],
   }));
-
-  const formAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: formSlide.value }],
-  }));
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
-  }));
+  const formAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: formSlide.value }] }));
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: buttonScale.value }] }));
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
-
     setIsLoading(true);
-    
-    // Simular proceso de login
-    setTimeout(() => {
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
       setIsLoading(false);
-      if (email === "admin@test.com" && password === "123456") {
-        Alert.alert("✅ ¡Bienvenido!", "Inicio de sesión exitoso", [
-          {
-            
-            onPress: () => router.push("/main"),
-          },
-        ]);
+
+      if (res.ok) {
+        // Guardar token y datos del usuario completos
+        await AsyncStorage.setItem("token", data.token);
+        
+        // Asegurarse de que todos los datos del usuario estén almacenados correctamente
+        const userData = {
+          id: data.user.id,
+          fullName: data.user.fullName,
+          email: data.user.email,
+          phone: data.user.phone,
+          provincia: data.user.provincia,
+          canton: data.user.canton,
+          distrito: data.user.distrito,
+          rol: data.user.rol
+        };
+        
+        await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+        // Verificar el rol del usuario directamente desde la respuesta
+        const userRole = data.user?.rol || data.user?.role;
+        
+        if (userRole === "admin") {
+          Alert.alert("✅ Bienvenido Administrador", "Accediendo al panel de administración", [
+            { text: "Continuar", onPress: () => router.push("/admin/mainAdmin") }
+          ]);
+        } else {
+          Alert.alert("✅ Bienvenido", "Inicio de sesión exitoso", [
+            { text: "Continuar", onPress: () => router.push("/main") }
+          ]);
+        }
       } else {
-        Alert.alert("❌ Error", "Credenciales incorrectas. Intenta con:\nEmail: admin@test.com\nPassword: 123456");
+        Alert.alert("❌ Error", data.error || data.message || "Credenciales incorrectas");
       }
-    }, 1500);
+    } catch (err) {
+      setIsLoading(false);
+      console.error("Error en login:", err);
+      Alert.alert("❌ Error", "No se pudo conectar con el servidor");
+    }
   };
 
   const handleButtonPress = () => {
@@ -115,27 +140,18 @@ const Login = (): React.ReactElement => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* LOGO ANIMADO */}
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <Image
-            source={require("../../assets/images/logo.png")}
-            style={styles.logo}
-          />
+          <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
           <Text style={styles.welcomeText}>¡Bienvenido de vuelta!</Text>
           <Text style={styles.subtitleText}>Inicia sesión para continuar</Text>
         </Animated.View>
 
-        {/* FORMULARIO */}
         <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
           <Animated.View entering={FadeInDown.delay(300).duration(800)}>
             <Text style={styles.formTitle}>Iniciar Sesión</Text>
           </Animated.View>
 
-          {/* EMAIL */}
           <Animated.View entering={SlideInRight.delay(400).duration(600)}>
             <Text style={styles.label}>📧 Correo Electrónico</Text>
             <View style={styles.inputContainer}>
@@ -152,7 +168,6 @@ const Login = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* PASSWORD */}
           <Animated.View entering={SlideInLeft.delay(500).duration(600)}>
             <Text style={styles.label}>🔒 Contraseña</Text>
             <View style={styles.inputContainer}>
@@ -165,38 +180,24 @@ const Login = (): React.ReactElement => {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color="#666"
-                />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
               </TouchableOpacity>
             </View>
           </Animated.View>
 
-          {/* BOTÓN LOGIN */}
           <Animated.View entering={FadeInUp.delay(600).duration(800)}>
             <TouchableOpacity
-              style={[
-                styles.loginButton,
-                { opacity: isLoading ? 0.7 : 1 },
-              ]}
+              style={[styles.loginButton, { opacity: isLoading ? 0.7 : 1 }]}
               onPress={handleButtonPress}
               disabled={isLoading}
             >
               <Animated.View style={buttonAnimatedStyle}>
-                <Text style={styles.loginButtonText}>
-                  {isLoading ? "⏳ Iniciando..." : "🚀 Iniciar Sesión"}
-                </Text>
+                <Text style={styles.loginButtonText}>{isLoading ? "⏳ Iniciando..." : "🚀 Iniciar Sesión"}</Text>
               </Animated.View>
             </TouchableOpacity>
           </Animated.View>
 
-          {/* ENLACES ADICIONALES */}
           <Animated.View entering={FadeIn.delay(700).duration(800)}>
             <View style={styles.linksContainer}>
               <TouchableOpacity onPress={() => alert("Recuperar contraseña")}>
@@ -205,7 +206,6 @@ const Login = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* BOTÓN REGISTER */}
           <Animated.View entering={FadeInUp.delay(800).duration(800)}>
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>¿No tienes cuenta?</Text>
@@ -214,13 +214,6 @@ const Login = (): React.ReactElement => {
               </TouchableOpacity>
             </View>
           </Animated.View>
-        </Animated.View>
-
-        {/* CREDENCIALES DE PRUEBA */}
-        <Animated.View entering={FadeIn.delay(900).duration(800)} style={styles.testCredentials}>
-          <Text style={styles.testTitle}>🧪 Credenciales de Prueba:</Text>
-          <Text style={styles.testText}>Email: admin@test.com</Text>
-          <Text style={styles.testText}>Password: 123456</Text>
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>

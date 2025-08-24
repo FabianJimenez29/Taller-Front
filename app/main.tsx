@@ -78,7 +78,7 @@ export default function App(): React.ReactElement {
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/")}>
+          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
             <Image source={require("../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>

@@ -38,26 +38,32 @@ export const useAppointment = () => {
 export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [appointmentData, setAppointmentData] = useState<AppointmentData>({});
 
+  // Inicialización
+  useEffect(() => {
+    // Inicializar el estado
+  }, []);
+
   const updateAppointmentData = (data: Partial<AppointmentData>) => {
-    setAppointmentData(prev => ({ ...prev, ...data }));
+    setAppointmentData(prev => {
+      const updated = { ...prev, ...data };
+      return updated;
+    });
   };
 
   const clearAppointmentData = async () => {
     setAppointmentData({});
     try {
       await AsyncStorage.removeItem('appointmentData');
-      
     } catch (error) {
-      
+      // Error al limpiar los datos
     }
   };
 
   const saveToStorage = async () => {
     try {
       await AsyncStorage.setItem('appointmentData', JSON.stringify(appointmentData));
-      
     } catch (error) {
-      
+      // Error al guardar los datos
     }
   };
 
@@ -67,10 +73,9 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (stored) {
         const parsed = JSON.parse(stored);
         setAppointmentData(parsed);
-        
       }
     } catch (error) {
-      
+      // Error al cargar los datos
     }
   };
 

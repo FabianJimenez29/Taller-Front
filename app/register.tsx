@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
+import Constants from 'expo-constants';
 import {
   Alert,
   Image,
@@ -12,7 +13,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -26,6 +29,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { Picker } from "@react-native-picker/picker";
+import { provincias } from "../constants/provinciasCantonesDistritos";
 
 const Register = (): React.ReactElement => {
   const router = useRouter();
@@ -37,6 +42,17 @@ const Register = (): React.ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [provincia, setProvincia] = useState("");
+  const [canton, setCanton] = useState("");
+  const [distrito, setDistrito] = useState("");
+
+  // Picker temporales
+  const [modalProvincia, setModalProvincia] = useState(false);
+  const [modalCanton, setModalCanton] = useState(false);
+  const [modalDistrito, setModalDistrito] = useState(false);
+  const [tempProvincia, setTempProvincia] = useState("");
+  const [tempCanton, setTempCanton] = useState("");
+  const [tempDistrito, setTempDistrito] = useState("");
 
   // Animaciones
   const logoScale = useSharedValue(0.8);
@@ -45,18 +61,13 @@ const Register = (): React.ReactElement => {
   const buttonScale = useSharedValue(1);
 
   useEffect(() => {
-    // Animación de entrada del logo
     logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
     logoRotation.value = withSequence(
       withTiming(10, { duration: 1000 }),
       withTiming(-10, { duration: 1000 }),
       withTiming(0, { duration: 1000 })
     );
-
-    // Animación del formulario
     formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
-
-    // Animación continua del logo
     logoRotation.value = withRepeat(
       withSequence(
         withTiming(5, { duration: 2000 }),
@@ -83,44 +94,54 @@ const Register = (): React.ReactElement => {
   }));
 
   const validateForm = () => {
-    if (!fullName || !email || !phone || !password || !confirmPassword) {
+    if (!fullName || !email || !phone || !password || !confirmPassword || !provincia || !canton || !distrito) {
       Alert.alert("Error", "Por favor completa todos los campos");
       return false;
     }
-
     if (password !== confirmPassword) {
       Alert.alert("Error", "Las contraseñas no coinciden");
       return false;
     }
-
     if (password.length < 6) {
       Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
       return false;
     }
-
     if (!email.includes("@")) {
       Alert.alert("Error", "Por favor ingresa un email válido");
       return false;
     }
-
     return true;
   };
 
+  const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
   const handleRegister = async () => {
     if (!validateForm()) return;
-
     setIsLoading(true);
-    
-    // Simular proceso de registro
-    setTimeout(() => {
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, phone, password, provincia, canton, distrito }),
+      });
+
+      const data = await res.json();
+
       setIsLoading(false);
-      Alert.alert("✅ ¡Registro Exitoso!", "Tu cuenta ha sido creada correctamente", [
-        {
-          text: "Iniciar Sesión",
-          onPress: () => router.push("/login"),
-        },
-      ]);
-    }, 2000);
+
+      if (res.ok) {
+        await AsyncStorage.setItem("token", data.token);
+        Alert.alert("✅ Registro exitoso", "Tu cuenta ha sido creada", [
+          { text: "Continuar", onPress: () => router.push("/") }
+        ]);
+      } else {
+        Alert.alert("❌ Error", data.error || data.message || "Algo salió mal");
+      }
+    } catch (err) {
+      setIsLoading(false);
+      Alert.alert("❌ Error", "No se pudo conectar con el servidor");
+    }
   };
 
   const handleButtonPress = () => {
@@ -130,6 +151,27 @@ const Register = (): React.ReactElement => {
     );
     handleRegister();
   };
+
+  // Funciones para obtener cantones y distritos
+  const getCantonesFromProvincia = () => {
+    const provinciaObj = provincias.find((p) => p.nombre === provincia);
+    return provinciaObj ? provinciaObj.cantones : [];
+  };
+
+  const getDistritosFromCanton = () => {
+    const provinciaObj = provincias.find((p) => p.nombre === provincia);
+    if (!provinciaObj) return [];
+    const cantonObj = provinciaObj.cantones.find((c) => c.nombre === canton);
+    return cantonObj ? cantonObj.distritos : [];
+  };
+
+  // Funciones para modales y confirmar
+  const openProvinciaModal = () => { setTempProvincia(provincia || ""); setModalProvincia(true); };
+  const openCantonModal = () => { if (provincia) { setTempCanton(canton || ""); setModalCanton(true); } };
+  const openDistritoModal = () => { if (canton) { setTempDistrito(distrito || ""); setModalDistrito(true); } };
+  const confirmProvincia = () => { setProvincia(tempProvincia); setCanton(""); setDistrito(""); setModalProvincia(false); };
+  const confirmCanton = () => { setCanton(tempCanton); setDistrito(""); setModalCanton(false); };
+  const confirmDistrito = () => { setDistrito(tempDistrito); setModalDistrito(false); };
 
   return (
     <KeyboardAvoidingView
@@ -215,6 +257,8 @@ const Register = (): React.ReactElement => {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                textContentType="username"
+                autoComplete="off"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -241,6 +285,8 @@ const Register = (): React.ReactElement => {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
+                textContentType="username"
+                autoComplete="off"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -253,6 +299,155 @@ const Register = (): React.ReactElement => {
                 />
               </TouchableOpacity>
             </View>
+          </Animated.View>
+
+          {/* PROVINCIA PICKER */}
+          <Animated.View entering={SlideInLeft.delay(580).duration(600)}>
+            <Text style={styles.label}>🌎 Provincia</Text>
+            <TouchableOpacity
+              style={styles.inputField}
+              onPress={openProvinciaModal}
+            >
+              <Text style={{ color: (modalProvincia ? tempProvincia : provincia) ? "#222" : "#aaa" }}>
+                {modalProvincia
+                  ? tempProvincia || "Seleccione una provincia"
+                  : provincia || "Seleccione una provincia"}
+              </Text>
+            </TouchableOpacity>
+            <Modal visible={modalProvincia} transparent animationType="slide">
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Seleccione una provincia</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={tempProvincia}
+                      onValueChange={setTempProvincia}
+                      style={{ width: '100%', height: 180 }}
+                    >
+                      <Picker.Item label="-- Seleccione una opción --" value="" color="#999" />
+                      {provincias.map((p) => (
+                        <Picker.Item key={p.nombre} label={p.nombre} value={p.nombre} color="#000" />
+                      ))}
+                    </Picker>
+                  </View>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.cancelBtn}
+                      onPress={() => setModalProvincia(false)}
+                    >
+                      <Text style={styles.cancelBtnText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.confirmBtn, (!tempProvincia || tempProvincia === "") && styles.disabledBtn]}
+                      onPress={confirmProvincia}
+                      disabled={!tempProvincia || tempProvincia === ""}
+                    >
+                      <Text style={styles.confirmBtnText}>Confirmar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          </Animated.View>
+
+          {/* CANTÓN PICKER */}
+          <Animated.View entering={SlideInRight.delay(600).duration(600)}>
+            <Text style={styles.label}>🏙️ Cantón</Text>
+            <TouchableOpacity
+              style={[styles.inputField, { opacity: !provincia ? 0.5 : 1 }]}
+              onPress={openCantonModal}
+              disabled={!provincia}
+            >
+              <Text style={{ color: (modalCanton ? tempCanton : canton) ? "#222" : "#aaa" }}>
+                {modalCanton
+                  ? tempCanton || "Seleccione un cantón"
+                  : (canton || (provincia ? "Seleccione un cantón" : "Seleccione provincia primero"))}
+              </Text>
+            </TouchableOpacity>
+            <Modal visible={modalCanton} transparent animationType="slide">
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Seleccione un cantón</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={tempCanton}
+                      onValueChange={setTempCanton}
+                      style={{ width: '100%', height: 180 }}
+                    >
+                      <Picker.Item label="-- Seleccione una opción --" value="" color="#999" />
+                      {getCantonesFromProvincia().map((c) => (
+                        <Picker.Item key={c.nombre} label={c.nombre} value={c.nombre} color="#000" />
+                      ))}
+                    </Picker>
+                  </View>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.cancelBtn}
+                      onPress={() => setModalCanton(false)}
+                    >
+                      <Text style={styles.cancelBtnText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.confirmBtn, (!tempCanton || tempCanton === "") && styles.disabledBtn]}
+                      onPress={confirmCanton}
+                      disabled={!tempCanton || tempCanton === ""}
+                    >
+                      <Text style={styles.confirmBtnText}>Confirmar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          </Animated.View>
+
+          {/* DISTRITO PICKER */}
+          <Animated.View entering={SlideInLeft.delay(620).duration(600)}>
+            <Text style={styles.label}>🏡 Distrito</Text>
+            <TouchableOpacity
+              style={[styles.inputField, { opacity: !canton ? 0.5 : 1 }]}
+              onPress={openDistritoModal}
+              disabled={!canton}
+            >
+              <Text style={{ color: (modalDistrito ? tempDistrito : distrito) ? "#222" : "#aaa" }}>
+                {modalDistrito
+                  ? tempDistrito || "Seleccione un distrito"
+                  : (distrito || (canton ? "Seleccione un distrito" : "Seleccione cantón primero"))}
+              </Text>
+            </TouchableOpacity>
+            <Modal visible={modalDistrito} transparent animationType="slide">
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Seleccione un distrito</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={tempDistrito}
+                      onValueChange={setTempDistrito}
+                      style={{ width: '100%', height: 180 }}
+                    >
+                      <Picker.Item label="-- Seleccione una opción --" value="" color="#999" />
+                      {getDistritosFromCanton().map((d) => (
+                        <Picker.Item key={d.nombre} label={d.nombre} value={d.nombre} color="#000" />
+                      ))}
+                    </Picker>
+                  </View>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={styles.cancelBtn}
+                      onPress={() => setModalDistrito(false)}
+                    >
+                      <Text style={styles.cancelBtnText}>Cancelar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.confirmBtn, (!tempDistrito || tempDistrito === "") && styles.disabledBtn]}
+                      onPress={confirmDistrito}
+                      disabled={!tempDistrito || tempDistrito === ""}
+                    >
+                      <Text style={styles.confirmBtnText}>Confirmar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
           </Animated.View>
 
           {/* BOTÓN REGISTER */}
@@ -277,7 +472,7 @@ const Register = (): React.ReactElement => {
           <Animated.View entering={FadeInUp.delay(700).duration(800)}>
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>¿Ya tienes cuenta?</Text>
-              <TouchableOpacity onPress={() => router.push("/login")}>
+              <TouchableOpacity onPress={() => router.push("/")}>
                 <Text style={styles.loginLink}>Iniciar sesión</Text>
               </TouchableOpacity>
             </View>
@@ -378,6 +573,18 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 5,
   },
+  // Nuevo estilo para los campos picker
+  inputField: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#e9ecef",
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    marginBottom: 20,
+    minHeight: 55,
+    justifyContent: "center",
+  },
   registerButton: {
     backgroundColor: "#76B414",
     borderRadius: 15,
@@ -429,4 +636,129 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     textAlign: "center",
   },
+  // Estilos del modal actualizados
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 25,
+    width: '90%',
+    maxHeight: 380,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  pickerContainer: {
+    width: '100%',
+    marginBottom: 25,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    height: 180,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  scrollPicker: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingVertical: 68, // Para centrar las opciones
+  },
+  pickerOption: {
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  selectedOption: {
+    backgroundColor: 'rgba(118, 180, 20, 0.1)',
+  },
+  pickerOptionText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  selectedOptionText: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  pickerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  selectionIndicator: {
+    width: '90%',
+    height: 44,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#76B414',
+    backgroundColor: 'rgba(118, 180, 20, 0.05)',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 15,
+  },
+  cancelBtn: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderColor: '#e9ecef',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  cancelBtnText: {
+    color: '#6c757d',
+    fontWeight: '600',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  confirmBtn: {
+    backgroundColor: '#76B414',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    flex: 1,
+    shadowColor: '#76B414',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  confirmBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  disabledBtn: {
+    backgroundColor: '#c8e6c9',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
 });
+
