@@ -9,17 +9,14 @@ import { useAppointment } from "../contexts/AppointmentContext";
 
 function getFechasCita() {
   const fechas = [];
-  const diasSemana = [, "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const hoy = new Date();
   for (let i = 0; i <= 7; i++) {
     const fecha = new Date(hoy);
     fecha.setDate(hoy.getDate() + i);
-    if (fecha.getDay() !== 0) {
-      // Excluye domingos
-      const label = `${diasSemana[fecha.getDay()]} ${fecha.getDate()}/${fecha.getMonth() + 1}/${fecha.getFullYear()}`;
-      const value = fecha.toISOString().split("T")[0];
-      fechas.push({ label, value });
-    }
+    const label = `${diasSemana[fecha.getDay()]} ${fecha.getDate()}/${fecha.getMonth() + 1}/${fecha.getFullYear()}`;
+    const value = fecha.toISOString().split("T")[0];
+    fechas.push({ label, value });
   }
   return fechas;
 }

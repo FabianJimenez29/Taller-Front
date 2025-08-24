@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import Constants from "expo-constants";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -30,12 +30,15 @@ type Quote = {
   modelo?: string;
   problema?: string;
   status?: string;
+  tecnico?: string;
+  procesoCompletado?: boolean;
 };
 
 const QuotesAdmin = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
 
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -101,7 +104,7 @@ const QuotesAdmin = () => {
     }
   };
 
-  const QuoteItem = React.memo(({ item }: { item: Quote }) => {
+  const QuoteItem = React.memo(({ item, onProcesar }: { item: Quote, onProcesar: (id: number | string) => void }) => {
     return (
       <View style={styles.quoteCard}>
         <Text style={styles.quoteTitle}>{item.servicio || item.title || "Cita"}</Text>
@@ -128,14 +131,39 @@ const QuotesAdmin = () => {
           <Text style={styles.quoteDetail}><Text style={styles.bold}>Modelo:</Text> {item.modelo}</Text>
         </View>
 
-        <Text style={[styles.status, getStatusStyle(item.status)]}>
-          {item.status || "Pendiente"}
-        </Text>
+        <View style={styles.statusRow}>
+          <Text style={[styles.status, getStatusStyle(item.status)]}>
+            {item.status || "Pendiente"}
+          </Text>
+          
+          {item.tecnico && (
+            <Text style={styles.tecnicoText}>Técnico: {item.tecnico}</Text>
+          )}
+        </View>
+        
+        <TouchableOpacity
+          style={styles.procesarButton}
+          onPress={() => onProcesar(item.id)}
+        >
+          <Text style={styles.procesarButtonText}>
+            {item.status === "Completado" ? "Ver detalles" : "Procesar cita"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   });
 
-  const renderItem = ({ item }: { item: Quote }) => <QuoteItem item={item} />;
+  const handleProcesarCita = (id: number | string) => {
+    // En Expo Router, usamos un objeto con los parámetros
+    router.push({
+      pathname: "/admin/procesarCita",
+      params: { id: id.toString() }
+    });
+  };
+  
+  const renderItem = ({ item }: { item: Quote }) => (
+    <QuoteItem item={item} onProcesar={handleProcesarCita} />
+  );
 
   function onRefresh(): void {
     setRefreshing(true);
@@ -222,6 +250,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "right",
+  },
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  tecnicoText: {
+    fontSize: 14,
+    color: "#34495e",
+    fontStyle: "italic",
+  },
+  procesarButton: {
+    backgroundColor: "#76B414",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  procesarButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
   emptyText: {
     fontSize: 16,
