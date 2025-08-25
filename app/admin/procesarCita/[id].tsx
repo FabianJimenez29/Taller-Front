@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { serviciosProcesos, ProcesoPaso } from '../../../constants/ServiciosProcesos';
 import ChecklistServicio from '../../../components/ChecklistServicioSimple';
+import ResumenCita from './ResumenCita';
+import { fetchCitaFixed } from './fetchCita';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -28,6 +30,10 @@ type ProcesoCita = {
   problema?: string;
   status?: string;
   tecnico?: string;
+  problemas_adicionales?: string;
+  checklist_data?: {
+    pasos: ProcesoPaso[];
+  };
 };
 
 // Ya no necesitamos este componente, usaremos ChecklistServicio
@@ -39,6 +45,7 @@ export default function ProcesarCitaScreen() {
   const [loading, setLoading] = useState(true);
   const [nombreTecnico, setNombreTecnico] = useState('');
   const [observaciones, setObservaciones] = useState('');
+  const [problemasAdicionales, setProblemasAdicionales] = useState('');
   const [savingData, setSavingData] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [pasosProceso, setPasosProceso] = useState<ProcesoPaso[]>([]);
@@ -49,63 +56,22 @@ export default function ProcesarCitaScreen() {
 
   const fetchCita = async () => {
     try {
-      setLoading(true);
-      
-      // Cargar datos del usuario (posiblemente el técnico)
-      try {
-        const userData = await AsyncStorage.getItem('user');
-        if (userData) {
-          const user = JSON.parse(userData);
-          setNombreTecnico(user.fullName || user.full_name || '');
-        }
-      } catch (error) {
-        console.error('Error al cargar datos de usuario:', error);
-      }
-      
-      // Cargar información de la cita
-      const response = await fetch(`${BACKEND_URL}/quotes/${id}`);
-      
-      if (!response.ok) {
-        throw new Error('No se pudo cargar la información de la cita');
-      }
-      
-      const data = await response.json();
-      const citaData = data.quote || data; // Adaptar según la respuesta del API
-      setCita(citaData);
-      
-      // Si ya tiene técnico asignado, mostrarlo
-      if (citaData.tecnico) {
-        setNombreTecnico(citaData.tecnico);
-      }
-      
-      // Cargar pasos del servicio
-      if (citaData.servicio) {
-        // Buscar el servicio correspondiente
-        const servicio = serviciosProcesos.find(s => 
-          s.id === citaData.servicio || 
-          s.nombre.toLowerCase().includes(citaData.servicio.toLowerCase())
-        );
-        
-        if (servicio) {
-          setPasosProceso(servicio.pasos);
-          
-          // Cargar pasos completados si existen
-          if (citaData.checklist_data && citaData.checklist_data.pasos) {
-            // Extraer los IDs de los pasos completados
-            const pasosCompletados = citaData.checklist_data.pasos
-              .filter((paso: ProcesoPaso) => paso.completado)
-              .map((paso: ProcesoPaso) => paso.id);
-            
-            setCompletedSteps(pasosCompletados);
-          }
-        }
-      }
+      await fetchCitaFixed(
+        id.toString(), 
+        setCita, 
+        setNombreTecnico, 
+        setProblemasAdicionales, 
+        setObservaciones, 
+        setPasosProceso, 
+        setCompletedSteps, 
+        setLoading, 
+        router, 
+        BACKEND_URL, 
+        serviciosProcesos,
+        AsyncStorage
+      );
     } catch (error) {
-      console.error('Error al cargar la cita:', error);
       Alert.alert('Error', 'No se pudo cargar la información de la cita');
-      router.back();
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -135,9 +101,10 @@ export default function ProcesarCitaScreen() {
   };
 
   const handleSaveProgress = async () => {
+    // Ya no verificamos si el nombre del técnico está vacío, porque se muestra el que viene del usuario
+    // o del sistema, pero no se puede modificar
     if (!nombreTecnico.trim()) {
-      Alert.alert('Error', 'Debe ingresar el nombre del técnico');
-      return;
+      setNombreTecnico("Técnico no identificado"); // Asignamos un valor por defecto
     }
 
     setSavingData(true);
@@ -160,7 +127,12 @@ export default function ProcesarCitaScreen() {
         body: JSON.stringify({
           tecnico: nombreTecnico,
           status: todosPasosCompletados ? 'Completado' : 'En proceso',
-          observaciones: observaciones.trim() || undefined
+          observaciones: observaciones.trim() || undefined,
+          problemas_adicionales: problemasAdicionales.trim() || undefined,
+          checklist_data: {
+            pasos: pasosProceso,
+            completedSteps: completedSteps
+          }
         }),
       });
       
@@ -237,6 +209,11 @@ export default function ProcesarCitaScreen() {
       </View>
     );
   }
+  
+  // Si la cita ya está completada, mostrar el componente de resumen
+  if (cita.status === 'Completado') {
+    return <ResumenCita cita={cita} />;
+  }
 
   const allStepsCompleted = pasosProceso.length > 0 && 
     pasosProceso.every(paso => paso.completado || completedSteps.includes(paso.id));
@@ -281,7 +258,7 @@ export default function ProcesarCitaScreen() {
             </Text>
             {cita.problema && (
               <Text style={styles.detailText}>
-                <Text style={styles.bold}>Problema reportado:</Text> {cita.problema}
+                <Text style={styles.bold}>Problema Adicional Reportado:</Text> {cita.problema}
               </Text>
             )}
           </View>
@@ -304,21 +281,33 @@ export default function ProcesarCitaScreen() {
         {/* Nombre del técnico */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Técnico responsable</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre del técnico"
-            value={nombreTecnico}
-            onChangeText={setNombreTecnico}
-          />
+          <View style={styles.tecnicoReadOnly}>
+            <Text style={styles.tecnicoText}>
+              {nombreTecnico || "No asignado"}
+            </Text>
+          </View>
           
-          <Text style={[styles.sectionTitle, {marginTop: 15}]}>Observaciones</Text>
+          <Text style={[styles.sectionTitle, {marginTop: 15}]}>Problemas adicionales detectados</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Ingrese observaciones sobre el servicio (opcional)"
+            placeholder="Ingrese aquí problemas adicionales que detecte y requieran autorización del cliente"
+            value={problemasAdicionales}
+            onChangeText={setProblemasAdicionales}
+            multiline={true}
+            numberOfLines={3}
+          />
+          <Text style={styles.infoText}>
+            Este campo será visible para el cliente y podrá autorizar estos trabajos adicionales
+          </Text>
+          
+          <Text style={[styles.sectionTitle, {marginTop: 15}]}>Observaciones internas</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Ingrese observaciones técnicas sobre el servicio (opcional)"
             value={observaciones}
             onChangeText={setObservaciones}
             multiline={true}
-            numberOfLines={4}
+            numberOfLines={3}
           />
         </View>
 
@@ -518,5 +507,24 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginVertical: 20,
+  },
+  tecnicoReadOnly: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  tecnicoText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#3498db',
+    fontStyle: 'italic',
+    marginTop: 5,
+    marginBottom: 10,
   },
 });

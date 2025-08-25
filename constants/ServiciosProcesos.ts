@@ -887,8 +887,17 @@ export const mapServicioIdToProcesosId = (servicioId: string): string => {
     "frenos_ajuste": "frenos_ajuste",
     "scanner": "scanner",
     "frenos_revision": "frenos_revision",
-    "super_evaluacion": "super_evaluacion"
+    "super_evaluacion": "super_evaluacion",
+    "19": "super_evaluacion", // ID de Super Evaluación en Servicios.ts
+    "Super Evaluación (28pts)": "super_evaluacion" // Nombre exacto en Servicios.ts
   };
+  
+  // Si el servicio contiene "super evaluación" sin importar mayúsculas/minúsculas
+  if (typeof servicioId === 'string' && 
+     (servicioId.toLowerCase().includes("super evaluación") || 
+      servicioId.toLowerCase().includes("super evaluacion"))) {
+    return "super_evaluacion";
+  }
   
   return mapeo[servicioId] || servicioId;
 };

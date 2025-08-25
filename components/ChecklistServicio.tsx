@@ -39,8 +39,14 @@ const ChecklistServicio = ({ citaId, servicioId, onComplete, onCancel }: Checkli
     const cargarDatos = async () => {
       try {
         // Mapear el ID del servicio al ID en ServiciosProcesos
+        if (!servicioId) {
+          Alert.alert('Error', 'No se proporcionó el ID del servicio');
+          onCancel && onCancel();
+          setLoading(false);
+          return;
+        }
         const procesoId = mapServicioIdToProcesosId(servicioId);
-        
+
         // Obtener los procesos del servicio
         const servicio = getProcesosServicio(procesoId);
         if (servicio) {
@@ -48,7 +54,7 @@ const ChecklistServicio = ({ citaId, servicioId, onComplete, onCancel }: Checkli
           setPasos(servicio.pasos);
         } else {
           Alert.alert('Error', 'No se encontró la información del servicio');
-          onCancel();
+          onCancel && onCancel();
         }
 
         // Intentar cargar datos guardados previamente
@@ -114,16 +120,47 @@ const ChecklistServicio = ({ citaId, servicioId, onComplete, onCancel }: Checkli
       const estadoCompletado = pasos.every(paso => paso.completado);
       
       try {
+        // Preparar los datos en formato reparaciones_list para el nuevo formato
+        const reparaciones_list = pasos.map(paso => ({
+          id: paso.id,
+          descripcion: paso.descripcion,
+          completado: paso.completado,
+          servicio_id: servicioId,
+          observaciones: paso.observaciones || null,
+          requiere_autorizacion: paso.requiereAutorizacion || false,
+          autorizacion_recibida: paso.autorizacionRecibida || false
+        }));
+        
+        // Construir observaciones consolidadas para mayor compatibilidad
+        let observacionesConsolidadas = observacionesGenerales || "";
+        
+        // Añadir observaciones específicas de cada paso a las observaciones generales
+        const observacionesPasos = pasos
+            .filter(paso => paso.observaciones && paso.observaciones.trim() !== "")
+            .map(paso => `[${paso.descripcion}]: ${paso.observaciones}`);
+        
+        if (observacionesPasos.length > 0) {
+          if (observacionesConsolidadas) {
+            observacionesConsolidadas += "\n\n=== Observaciones específicas ===\n";
+          }
+          observacionesConsolidadas += observacionesPasos.join("\n");
+        }
+        
         const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/quotes/${citaId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            status: estadoCompletado ? 'Completado' : 'En progreso',
+            status: estadoCompletado ? 'Completado' : 'En proceso',
             tecnico: nombreTecnico,
-            observaciones: observacionesGenerales,
-            checklist_data: datosGuardar
+            observaciones: observacionesConsolidadas, // Enviamos observaciones consolidadas
+            checklist_data: {
+              ...datosGuardar,
+              observaciones: observacionesConsolidadas  // También las incluimos aquí
+            },
+            reparaciones_list: reparaciones_list, // Enviamos TODOS los pasos del checklist en el nuevo formato
+            servicio_id: servicioId // Aseguramos que el servicio_id esté guardado
           }),
         });
         

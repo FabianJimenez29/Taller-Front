@@ -17,10 +17,10 @@ import { PLACA_API_URL, PLACA_API_USERNAME } from "../constants/PlacaApi";
 import { useAppointment } from "../contexts/AppointmentContext";
 
 const tiposPlaca = [
-    { label: "Particular", value: "particular" },
-    { label: "Comercial", value: "comercial" },
-    { label: "Transporte Público", value: "publico" },
-]; 
+    { label: "Particular", value: "Particular" },
+    { label: "Comercial", value: "Comercial" },
+    { label: "Transporte Público", value: "Transporte Público" },
+];
 
 const VehicleInfo = (): React.ReactElement => {
     const router = useRouter();
@@ -264,7 +264,7 @@ const VehicleInfo = (): React.ReactElement => {
                 />
 
                 {/* Problema */}
-                <Text style={styles.label}>Indique El Problema</Text>
+                <Text style={styles.label}>Indique Algun Problema Adicional</Text>
                 <TextInput
                     style={[styles.textInput, { height: 100, textAlignVertical: "top" }]}
                     placeholder="Ingrese Texto Acá"

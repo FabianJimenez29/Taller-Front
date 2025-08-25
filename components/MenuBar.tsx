@@ -192,6 +192,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     zIndex: 1000,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 10,
   },
   menuContainer: {
     flexDirection: "row",
@@ -201,8 +206,8 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     padding: 8,
-    borderRadius: 8,
-    minWidth: 44,
+    borderRadius: 12,
+    minWidth: 48,
     alignItems: "center",
     justifyContent: "center",
   },

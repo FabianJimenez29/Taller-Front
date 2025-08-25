@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import MenuBar from "../components/MenuBar";
+import { getPromotionImages, PromotionImage } from "./utils/promotions";
 
 const reviews = [
   { id: 1, text: "Excelente servicio, muy rápido y confiable." },
@@ -10,17 +11,15 @@ const reviews = [
   { id: 3, text: "Muy recomendado, atención al cliente de 10." },
   { id: 4, text: "Precios justos y trato amable." },
   { id: 5, text: "Volveré sin duda si tengo otro problema." },
-
-
 ];
 
-const bannerImages = [
+// Imágenes de respaldo en caso de error o mientras se cargan las de Supabase
+const fallbackBannerImages = [
   require("../assets/images/banner.png"),
   require("../assets/images/banner2.png"),
   require("../assets/images/banner3.png"),
   require("../assets/images/banner4.png"),
   require("../assets/images/banner5.png"),
-  // Agrega más imágenes aquí
 ];
 
 const handleLogout = () => {
@@ -45,14 +44,51 @@ const handleLogout = () => {
 };
 
 export default function App(): React.ReactElement {
-  const router = useRouter(); // <--- Agrega esta línea
+  const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [bannerImages, setBannerImages] = useState<PromotionImage[]>([]);
+  const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
 
   const bannerWidth = 385;
+  
+  // Cargar imágenes del banner desde Supabase
+  useEffect(() => {
+    async function loadBannerImages() {
+      setIsLoadingImages(true);
+      try {
+        const images = await getPromotionImages();
+        
+        if (images && images.length > 0) {
+          setBannerImages(images);
+          console.log('Imágenes promocionales cargadas:', images.length);
+        } else {
+          // Si no hay imágenes en Supabase, usar las locales
+          console.log('No se encontraron imágenes promocionales en Supabase');
+          setBannerImages(fallbackBannerImages.map((img, idx) => ({
+            name: `banner${idx + 1}`,
+            url: Image.resolveAssetSource(img).uri
+          })));
+        }
+      } catch (error) {
+        console.error('Error al cargar imágenes promocionales:', error);
+        // En caso de error, usar las imágenes locales
+        setBannerImages(fallbackBannerImages.map((img, idx) => ({
+          name: `banner${idx + 1}`,
+          url: Image.resolveAssetSource(img).uri
+        })));
+      } finally {
+        setIsLoadingImages(false);
+      }
+    }
+    
+    loadBannerImages();
+  }, []);
 
   // Auto-scroll effect: solo avanza a la derecha y vuelve al inicio
   useEffect(() => {
+    if (bannerImages.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentIndex(prevIndex => {
         const nextIndex = (prevIndex + 1) % bannerImages.length;
@@ -62,7 +98,7 @@ export default function App(): React.ReactElement {
     }, 4500);
 
     return () => clearInterval(interval);
-  }, []); // Solo se crea una vez
+  }, [bannerImages]); // Se ejecuta cuando cambia bannerImages
 
   // Actualiza el índice al hacer scroll manual
   const onScroll = (event: any) => {
@@ -95,35 +131,44 @@ export default function App(): React.ReactElement {
       {/* BANNER DE PUBLICIDAD - Carrusel con marco redondeado y sombra externa */}
       <View style={styles.bannerShadow}>
         <View style={styles.bannerFrame}>
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            style={styles.bannerCarousel}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-          >
-            {bannerImages.map((img, idx) => (
-              <Image
-                key={idx}
-                source={img}
-                style={styles.banner}
-              />
-            ))}
-          </ScrollView>
-          {/* Indicadores de página */}
-          <View style={styles.carouselDots}>
-            {bannerImages.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.dot,
-                  currentIndex === idx && styles.dotActive,
-                ]}
-              />
-            ))}
-          </View>
+          {isLoadingImages ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#E51514" />
+              <Text style={styles.loadingText}>Cargando promociones...</Text>
+            </View>
+          ) : (
+            <>
+              <ScrollView
+                ref={scrollRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.bannerCarousel}
+                onScroll={onScroll}
+                scrollEventThrottle={16}
+              >
+                {bannerImages.map((img, idx) => (
+                  <Image
+                    key={idx}
+                    source={{ uri: img.url }}
+                    style={styles.banner}
+                  />
+                ))}
+              </ScrollView>
+              {/* Indicadores de página */}
+              <View style={styles.carouselDots}>
+                {bannerImages.map((_, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.dot,
+                      currentIndex === idx && styles.dotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -139,7 +184,7 @@ export default function App(): React.ReactElement {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={() => alert("Ver estado de reparación")}>
+        <TouchableOpacity style={styles.button} onPress={() => router.push("/repairStatus")}>
           <View style={styles.buttonContent}>
             <Text style={styles.buttonText}>Repair Status</Text>
             <Image source={require("../assets/images/RepairStatusIcon.png")} style={styles.buttonIconRepair} />
@@ -391,6 +436,19 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     zIndex: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 385,
+    height: 180,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
 });
 

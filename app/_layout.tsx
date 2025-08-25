@@ -7,12 +7,17 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AppointmentProvider } from '../contexts/AppointmentContext';
 import { LanguageProvider } from '../contexts/LanguageContext';
+import { NavigationAnimations } from '../constants/NavigationAnimations';
+import { Colors } from '../constants/Colors';
 
 
 // Componente personalizado para manejar las animaciones de navegación
 function CustomStack() {
   const params = useLocalSearchParams<{ direction?: string }>();
   const direction = params.direction;
+  
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
   
   // Determinar la animación basada en el parámetro de dirección
   const getAnimation = () => {
@@ -27,10 +32,17 @@ function CustomStack() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: getAnimation(),
+        animation: getAnimation() as any,
         animationDuration: 300,
         gestureEnabled: true,
         gestureDirection: 'horizontal',
+        headerStyle: {
+          backgroundColor: theme.primary,
+        },
+        headerTintColor: theme.textInverse,
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        }
       }}
     >
       <Stack.Screen name="(tabs)" />
@@ -62,9 +74,29 @@ export default function RootLayout() {
   return (
     <LanguageProvider>
       <AppointmentProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={colorScheme === 'dark' ? {
+          ...DarkTheme,
+          colors: {
+            ...DarkTheme.colors,
+            primary: Colors.dark.primary,
+            background: Colors.dark.background,
+            card: Colors.dark.card,
+            text: Colors.dark.text,
+            border: Colors.dark.border,
+          }
+        } : {
+          ...DefaultTheme,
+          colors: {
+            ...DefaultTheme.colors,
+            primary: Colors.light.primary,
+            background: Colors.light.background,
+            card: Colors.light.card,
+            text: Colors.light.text,
+            border: Colors.light.border,
+          }
+        }}>
           <CustomStack />
-          <StatusBar style="auto" />
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </ThemeProvider>
       </AppointmentProvider>
     </LanguageProvider>

@@ -130,6 +130,11 @@ const QuotesAdmin = () => {
           <Text style={styles.quoteDetail}><Text style={styles.bold}>Vehículo:</Text> {item.tipo_placa} - {item.numero_placa}</Text>
           <Text style={styles.quoteDetail}><Text style={styles.bold}>Marca:</Text> {item.marca}</Text>
           <Text style={styles.quoteDetail}><Text style={styles.bold}>Modelo:</Text> {item.modelo}</Text>
+          {item.problema && (
+            <Text style={styles.quoteDetail}>
+              <Text style={styles.bold}>Problema Adicional Reportado:</Text> {item.problema}
+            </Text>
+          )}
         </View>
 
         <View style={styles.statusRow}>
@@ -150,7 +155,10 @@ const QuotesAdmin = () => {
         )}
         
         <TouchableOpacity
-          style={styles.procesarButton}
+          style={[
+            styles.procesarButton,
+            item.status === "Completado" ? styles.detallesButton : {}
+          ]}
           onPress={() => onProcesar(item.id)}
         >
           <Text style={styles.procesarButtonText}>
@@ -296,6 +304,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 10,
     alignItems: "center",
+  },
+  detallesButton: {
+    backgroundColor: "#3498db",
   },
   procesarButtonText: {
     color: "white",
