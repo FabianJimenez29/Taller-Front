@@ -3,7 +3,7 @@ import { router, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import MenuBar from "../components/MenuBar";
-import { getPromotionImages, PromotionImage } from "./utils/promotions";
+import { getBannerImages, BannerImage } from "../lib/bannerImages";
 
 const reviews = [
   { id: 1, text: "Excelente servicio, muy rápido y confiable." },
@@ -47,32 +47,21 @@ export default function App(): React.ReactElement {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [bannerImages, setBannerImages] = useState<PromotionImage[]>([]);
+  const [bannerImages, setBannerImages] = useState<BannerImage[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
 
   const bannerWidth = 385;
   
-  // Cargar imágenes del banner desde Supabase
+  // Cargar imágenes del banner desde el backend o usar estáticas si hay error
   useEffect(() => {
     async function loadBannerImages() {
       setIsLoadingImages(true);
       try {
-        const images = await getPromotionImages();
-        
-        if (images && images.length > 0) {
-          setBannerImages(images);
-          console.log('Imágenes promocionales cargadas:', images.length);
-        } else {
-          // Si no hay imágenes en Supabase, usar las locales
-          console.log('No se encontraron imágenes promocionales en Supabase');
-          setBannerImages(fallbackBannerImages.map((img, idx) => ({
-            name: `banner${idx + 1}`,
-            url: Image.resolveAssetSource(img).uri
-          })));
-        }
+        // getBannerImages maneja internamente la lógica de fallback
+        const images = await getBannerImages();
+        setBannerImages(images);
       } catch (error) {
-        console.error('Error al cargar imágenes promocionales:', error);
-        // En caso de error, usar las imágenes locales
+        // En caso de error extremo, usar las imágenes locales como último recurso
         setBannerImages(fallbackBannerImages.map((img, idx) => ({
           name: `banner${idx + 1}`,
           url: Image.resolveAssetSource(img).uri
