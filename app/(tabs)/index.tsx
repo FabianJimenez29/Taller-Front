@@ -43,24 +43,36 @@ const Login = (): React.ReactElement => {
   const formSlide = useSharedValue(50);
   const buttonScale = useSharedValue(1);
 
+  // Add debug logging for environment variables
   const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+  console.log("🔍 Debug - BACKEND_URL:", BACKEND_URL);
+  console.log("🔍 Debug - All ENV:", process.env);
+  
+  // Fallback if environment variable is missing
+  const apiBaseUrl = BACKEND_URL || "https://backend-login-one.vercel.app/api";
+  console.log("🔍 Using API URL:", apiBaseUrl);
 
   useEffect(() => {
-    logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
-    logoRotation.value = withSequence(
-      withTiming(10, { duration: 1000 }),
-      withTiming(-10, { duration: 1000 }),
-      withTiming(0, { duration: 1000 })
-    );
-    formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
-    logoRotation.value = withRepeat(
-      withSequence(
-        withTiming(5, { duration: 2000 }),
-        withTiming(-5, { duration: 2000 })
-      ),
-      -1,
-      true
-    );
+    // Handle animations
+    try {
+      logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
+      logoRotation.value = withSequence(
+        withTiming(10, { duration: 1000 }),
+        withTiming(-10, { duration: 1000 }),
+        withTiming(0, { duration: 1000 })
+      );
+      formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
+      logoRotation.value = withRepeat(
+        withSequence(
+          withTiming(5, { duration: 2000 }),
+          withTiming(-5, { duration: 2000 })
+        ),
+        -1,
+        true
+      );
+    } catch (err) {
+      console.error("🔴 Animation error:", err);
+    }
   }, []);
 
   const logoAnimatedStyle = useAnimatedStyle(() => ({
@@ -77,17 +89,27 @@ const Login = (): React.ReactElement => {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/login`, {
+      console.log("🔍 Attempting login with API URL:", apiBaseUrl);
+      
+      // Use the fallback URL if needed
+      const loginUrl = `${apiBaseUrl}/login`;
+      console.log("🔍 Full login URL:", loginUrl);
+      
+      const res = await fetch(loginUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+      
+      console.log("🔍 Login response status:", res.status);
+      
       const data = await res.json();
+      console.log("🔍 Login response data:", JSON.stringify(data).substring(0, 200) + "...");
 
       setIsLoading(false);
 
       if (res.ok) {
+        console.log("✅ Login successful");
         // Guardar token y datos del usuario completos
         await AsyncStorage.setItem("token", data.token);
         
@@ -100,13 +122,15 @@ const Login = (): React.ReactElement => {
           provincia: data.user.provincia,
           canton: data.user.canton,
           distrito: data.user.distrito,
-          rol: data.user.rol
+          rol: data.user.rol || data.user.role
         };
         
+        console.log("🔍 Saving user data:", JSON.stringify(userData).substring(0, 200));
         await AsyncStorage.setItem("user", JSON.stringify(userData));
 
         // Verificar el rol del usuario directamente desde la respuesta
         const userRole = data.user?.rol || data.user?.role;
+        console.log("🔍 User role:", userRole);
         
         if (userRole === "admin") {
           Alert.alert("✅ Bienvenido Administrador", "Accediendo al panel de administración", [
@@ -118,12 +142,16 @@ const Login = (): React.ReactElement => {
           ]);
         }
       } else {
+        console.log("❌ Login failed:", data.error || data.message);
         Alert.alert("❌ Error", data.error || data.message || "Credenciales incorrectas");
       }
-    } catch (err) {
+    } catch (err: any) {
       setIsLoading(false);
-      console.error("Error en login:", err);
-      Alert.alert("❌ Error", "No se pudo conectar con el servidor");
+      console.error("🔴 Error en login:", err);
+      Alert.alert(
+        "❌ Error", 
+        "No se pudo conectar con el servidor. Detalles: " + (err.message || String(err))
+      );
     }
   };
 

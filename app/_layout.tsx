@@ -2,6 +2,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View, Text } from 'react-native';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ErrorBoundary from '../components/ErrorBoundary';
+import FallbackScreen from '../components/FallbackScreen';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -63,42 +68,93 @@ function CustomStack() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  
+  // Make the font loading optional to prevent app crash
+  // First attempt to load fonts normally
+  const [primaryFontLoaded, primaryFontError] = useFonts({
+    // Try to load the primary font
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  
+  // If primary font fails, try backup font
+  const [backupFontLoaded, backupFontError] = useFonts({
+    // Fallback to system font if both fail
+    SpaceMono: primaryFontError ? 
+      require('../assets/fonts/SpaceMono-Regular-backup.ttf') : 
+      require('../assets/fonts/SpaceMono-Regular.ttf'),
+  });
+  
+  // Consider fonts "loaded" if either primary or backup loaded, or if both failed (to avoid blocking the app)
+  const loaded = primaryFontLoaded || backupFontLoaded || (primaryFontError && backupFontError);
+  
+  // Add error handling but don't block app rendering
+  if (primaryFontError && backupFontError) {
+    console.error("🔴 Primary font loading error:", primaryFontError);
+    console.error("🔴 Backup font loading error:", backupFontError);
+    console.log("⚠️ Continuing without custom fonts");
+  } else if (primaryFontError) {
+    console.error("⚠️ Primary font loading error:", primaryFontError);
+    console.log("✅ Using backup font instead");
+  }
+
+  // Log application startup information for debugging
+  useEffect(() => {
+    console.log("🚀 App starting - RootLayout mounted");
+    console.log("🔍 Environment:", process.env.NODE_ENV);
+    console.log("🔍 Backend URL:", process.env.EXPO_PUBLIC_BACKEND_URL);
+    
+    // Check for AsyncStorage token
+    const checkToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log("🔑 Token exists:", !!token);
+      } catch (e) {
+        console.error("🔴 AsyncStorage error:", e);
+      }
+    };
+    
+    checkToken();
+    
+    return () => {
+      console.log("🚪 RootLayout unmounting");
+    };
+  }, []);
 
   if (!loaded) {
-    return null;
+    // Return a better loading screen
+    return <FallbackScreen />;
   }
 
   return (
-    <LanguageProvider>
-      <AppointmentProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? {
-          ...DarkTheme,
-          colors: {
-            ...DarkTheme.colors,
-            primary: Colors.dark.primary,
-            background: Colors.dark.background,
-            card: Colors.dark.card,
-            text: Colors.dark.text,
-            border: Colors.dark.border,
-          }
-        } : {
-          ...DefaultTheme,
-          colors: {
-            ...DefaultTheme.colors,
-            primary: Colors.light.primary,
-            background: Colors.light.background,
-            card: Colors.light.card,
-            text: Colors.light.text,
-            border: Colors.light.border,
-          }
-        }}>
-          <CustomStack />
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        </ThemeProvider>
-      </AppointmentProvider>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <AppointmentProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? {
+            ...DarkTheme,
+            colors: {
+              ...DarkTheme.colors,
+              primary: Colors.dark.primary,
+              background: Colors.dark.background,
+              card: Colors.dark.card,
+              text: Colors.dark.text,
+              border: Colors.dark.border,
+            }
+          } : {
+            ...DefaultTheme,
+            colors: {
+              ...DefaultTheme.colors,
+              primary: Colors.light.primary,
+              background: Colors.light.background,
+              card: Colors.light.card,
+              text: Colors.light.text,
+              border: Colors.light.border,
+            }
+          }}>
+            <CustomStack />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          </ThemeProvider>
+        </AppointmentProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }

@@ -8,6 +8,11 @@
     "scheme": "tallerfront",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "packagerOpts": {
+      "sourceExts": ["js", "jsx", "ts", "tsx", "json"],
+      "config": "metro.config.json"
+    },
     "ios": {
       "supportsTablet": true
     },
