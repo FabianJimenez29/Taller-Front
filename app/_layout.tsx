@@ -71,32 +71,7 @@ export default function RootLayout() {
   
   // Make the font loading optional to prevent app crash
   // First attempt to load fonts normally
-  const [primaryFontLoaded, primaryFontError] = useFonts({
-    // Try to load the primary font
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
   
-  // If primary font fails, try backup font
-  const [backupFontLoaded, backupFontError] = useFonts({
-    // Fallback to system font if both fail
-    SpaceMono: primaryFontError ? 
-      require('../assets/fonts/SpaceMono-Regular-backup.ttf') : 
-      require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-  
-  // Consider fonts "loaded" if either primary or backup loaded, or if both failed (to avoid blocking the app)
-  const loaded = primaryFontLoaded || backupFontLoaded || (primaryFontError && backupFontError);
-  
-  // Add error handling but don't block app rendering
-  if (primaryFontError && backupFontError) {
-    console.error("🔴 Primary font loading error:", primaryFontError);
-    console.error("🔴 Backup font loading error:", backupFontError);
-    console.log("⚠️ Continuing without custom fonts");
-  } else if (primaryFontError) {
-    console.error("⚠️ Primary font loading error:", primaryFontError);
-    console.log("✅ Using backup font instead");
-  }
-
   // Log application startup information for debugging
   useEffect(() => {
     console.log("🚀 App starting - RootLayout mounted");
@@ -120,10 +95,7 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (!loaded) {
-    // Return a better loading screen
-    return <FallbackScreen />;
-  }
+  
 
   return (
     <ErrorBoundary>
