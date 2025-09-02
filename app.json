@@ -1,6 +1,7 @@
 {
   "expo": {
-    "name": "Taller-Front",
+  "name": "Taller-Front",
+  "jsEngine": "jsc",
     "slug": "Taller-Front",
     "version": "1.0.0",
     "orientation": "portrait",

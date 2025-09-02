@@ -94,20 +94,21 @@ export default function App(): React.ReactElement {
     const index = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
     setCurrentIndex(index);
   };
+  
 
   return (
     <View style={styles.container}>
       {/* LOGO Y ICONO DE LENGUAJE */}
       <View style={styles.logoRow}>
-        <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}>
+        <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}> 
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
+          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}> 
             <Image source={require("../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}> 
           <Ionicons name="log-out-outline" size={32} color="#E51514" />
         </TouchableOpacity>
       </View>

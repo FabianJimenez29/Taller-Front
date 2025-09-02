@@ -74,15 +74,13 @@ export default function RootLayout() {
   
   // Log application startup information for debugging
   useEffect(() => {
-    console.log("🚀 App starting - RootLayout mounted");
-    console.log("🔍 Environment:", process.env.NODE_ENV);
-    console.log("🔍 Backend URL:", process.env.EXPO_PUBLIC_BACKEND_URL);
+    
     
     // Check for AsyncStorage token
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        console.log("🔑 Token exists:", !!token);
+        
       } catch (e) {
         console.error("🔴 AsyncStorage error:", e);
       }

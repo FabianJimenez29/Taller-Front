@@ -43,14 +43,11 @@ const Login = (): React.ReactElement => {
   const formSlide = useSharedValue(50);
   const buttonScale = useSharedValue(1);
 
-  // Add debug logging for environment variables
-  const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-  console.log("🔍 Debug - BACKEND_URL:", BACKEND_URL);
-  console.log("🔍 Debug - All ENV:", process.env);
   
-  // Fallback if environment variable is missing
-  const apiBaseUrl = BACKEND_URL || "https://backend-login-one.vercel.app/api";
-  console.log("🔍 Using API URL:", apiBaseUrl);
+  const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+  
+  
+  
 
   useEffect(() => {
     // Handle animations
@@ -89,10 +86,10 @@ const Login = (): React.ReactElement => {
     setIsLoading(true);
 
     try {
-      console.log("🔍 Attempting login with API URL:", apiBaseUrl);
+    
       
       // Use the fallback URL if needed
-      const loginUrl = `${apiBaseUrl}/login`;
+      const loginUrl = `${BACKEND_URL}/login`;
       console.log("🔍 Full login URL:", loginUrl);
       
       const res = await fetch(loginUrl, {
@@ -142,12 +139,12 @@ const Login = (): React.ReactElement => {
           ]);
         }
       } else {
-        console.log("❌ Login failed:", data.error || data.message);
+        
         Alert.alert("❌ Error", data.error || data.message || "Credenciales incorrectas");
       }
     } catch (err: any) {
       setIsLoading(false);
-      console.error("🔴 Error en login:", err);
+      
       Alert.alert(
         "❌ Error", 
         "No se pudo conectar con el servidor. Detalles: " + (err.message || String(err))
