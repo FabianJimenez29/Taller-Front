@@ -39,6 +39,7 @@ const QuotesAdmin = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [updatingQuote, setUpdatingQuote] = useState<string | number | null>(null);
   const router = useRouter();
 
   const today = new Date();
@@ -70,10 +71,22 @@ const QuotesAdmin = () => {
   const fetchQuotes = async (isInitialLoad = false) => {
     if (isInitialLoad) setLoading(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/quotes?date=${todayStr}`);
+      const fullUrl = `${BACKEND_URL}/quotes`;
+      
+      const response = await fetch(fullUrl);
+      const responseData = await response.json();
+      
+      const filteredQuotes = responseData.quotes?.filter((quote: Quote) => 
+        quote.fecha === todayStr
+      ) || [];
+      
+      setQuotes(filteredQuotes);
+      
+      const res = await fetch(fullUrl);
       const data = await res.json();
       setQuotes(data.quotes || []);
     } catch (err) {
+      console.error('Error fetching quotes:', err);
       if (isInitialLoad) setQuotes([]);
     }
     if (isInitialLoad) setLoading(false);
@@ -105,7 +118,7 @@ const QuotesAdmin = () => {
     }
   };
 
-  const QuoteItem = React.memo(({ item, onProcesar }: { item: Quote, onProcesar: (id: number | string) => void }) => {
+  const QuoteItem = React.memo(({ item, onProcesar }: { item: Quote, onProcesar: (id: number | string, status?: string) => void }) => {
     return (
       <View style={styles.quoteCard}>
         <Text style={styles.quoteTitle}>{item.servicio || item.title || "Cita"}</Text>
@@ -157,20 +170,66 @@ const QuotesAdmin = () => {
         <TouchableOpacity
           style={[
             styles.procesarButton,
-            item.status === "Completado" ? styles.detallesButton : {}
+            item.status === "Completado" ? styles.detallesButton : 
+            item.status === "En proceso" ? styles.enProcesoButton : {}
           ]}
-          onPress={() => onProcesar(item.id)}
+          onPress={() => onProcesar(item.id, item.status)}
+          disabled={updatingQuote === item.id}
         >
           <Text style={styles.procesarButtonText}>
-            {item.status === "Completado" ? "Ver detalles" : "Procesar cita"}
+            {updatingQuote === item.id ? "Actualizando..." :
+             item.status === "Completado" ? "Ver detalles" :
+             item.status === "En proceso" ? "Finalizar" :
+             "Procesar cita"}
           </Text>
         </TouchableOpacity>
       </View>
     );
   });
 
-  const handleProcesarCita = (id: number | string) => {
-    // Usamos la ruta dinámica con el id como parámetro
+  const updateQuoteStatus = async (id: number | string, newStatus: string) => {
+    try {
+      setUpdatingQuote(id);
+      const fullUrl = `${BACKEND_URL}/quotes/${id}`;
+      const response = await fetch(fullUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          tecnico: 'Admin' 
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el estado de la cita');
+      }
+
+      await fetchQuotes(false);
+    } catch (error) {
+      console.error('Error updating quote:', error);
+    } finally {
+      setUpdatingQuote(null);
+    }
+  };
+
+  const handleProcesarCita = async (id: number | string, currentStatus?: string) => {
+    if (currentStatus === "Completado") {
+      router.push({
+        pathname: '/admin/procesarCita/[id]',
+        params: { id: id.toString() }
+      });
+      return;
+    }
+
+    if (!currentStatus || currentStatus === "Pendiente") {
+      await updateQuoteStatus(id, "En proceso");
+    } 
+    else if (currentStatus === "En proceso") {
+      await updateQuoteStatus(id, "Completado");
+    }
+
     router.push({
       pathname: '/admin/procesarCita/[id]',
       params: { id: id.toString() }
@@ -221,6 +280,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f4f6f9",
     paddingTop: Constants.statusBarHeight + 20,
     paddingHorizontal: 20,
+  },
+  enProcesoButton: {
+    backgroundColor: "#f39c12",
   },
   header: {
     fontSize: 22,

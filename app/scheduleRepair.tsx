@@ -555,6 +555,8 @@ const styles = StyleSheet.create({
   },
   form: {
     marginTop: 20,
+    width: "80%",
+    paddingHorizontal: 10,
   },
   label: {
     fontSize: 16,
@@ -571,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: "#fff",
     justifyContent: "center",
-    width: "80%",
+    width: "100%",
     alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -588,10 +590,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingTop: 20,
     paddingBottom: 40,
     maxHeight: '60%',
+    width: "100%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.2,
@@ -611,6 +614,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
     marginBottom: 20,
+    width: "95%",
+    alignSelf: "center",
     ...Platform.select({
       ios: {
         height: 180, // Altura específica para iOS

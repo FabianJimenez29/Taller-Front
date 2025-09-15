@@ -1,3 +1,4 @@
+import 'react-native-reanimated';
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -14,9 +15,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Animated,
-{
+import Animated from "react-native-reanimated";
+import {
   FadeIn,
   FadeInDown,
   FadeInUp,
@@ -27,7 +29,7 @@ import Animated,
   withRepeat,
   withSequence,
   withSpring,
-  withTiming,
+  withTiming
 } from "react-native-reanimated";
 
 const Login = (): React.ReactElement => {
@@ -50,30 +52,17 @@ const Login = (): React.ReactElement => {
   
 
   useEffect(() => {
-    // Handle animations
     try {
-      logoScale.value = withSpring(1, { damping: 15, stiffness: 100 });
-      logoRotation.value = withSequence(
-        withTiming(10, { duration: 1000 }),
-        withTiming(-10, { duration: 1000 }),
-        withTiming(0, { duration: 1000 })
-      );
-      formSlide.value = withSpring(0, { damping: 15, stiffness: 100 });
-      logoRotation.value = withRepeat(
-        withSequence(
-          withTiming(5, { duration: 2000 }),
-          withTiming(-5, { duration: 2000 })
-        ),
-        -1,
-        true
-      );
+      // Simplified animations
+      logoScale.value = withSpring(1);
+      formSlide.value = withSpring(0);
     } catch (err) {
       console.error("🔴 Animation error:", err);
     }
   }, []);
 
   const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }, { rotate: `${logoRotation.value}deg` }],
+    transform: [{ scale: logoScale.value }],
   }));
   const formAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: formSlide.value }] }));
   const buttonAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: buttonScale.value }] }));
@@ -245,8 +234,6 @@ const Login = (): React.ReactElement => {
   );
 };
 
-export default Login;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -388,3 +375,5 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 });
+
+export default Login;

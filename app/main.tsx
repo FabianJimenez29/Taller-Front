@@ -3,6 +3,7 @@ import { router, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import MenuBar from "../components/MenuBar";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBannerImages, BannerImage } from "../lib/bannerImages";
 
 const reviews = [
@@ -13,7 +14,7 @@ const reviews = [
   { id: 5, text: "Volveré sin duda si tengo otro problema." },
 ];
 
-// Imágenes de respaldo en caso de error o mientras se cargan las de Supabase
+
 const fallbackBannerImages = [
   require("../assets/images/banner.png"),
   require("../assets/images/banner2.png"),
@@ -21,6 +22,33 @@ const fallbackBannerImages = [
   require("../assets/images/banner4.png"),
   require("../assets/images/banner5.png"),
 ];
+
+const UserWelcome = () => {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          const { fullName } = JSON.parse(userData);
+          setUserName(fullName || "");
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    };
+    loadUserData();
+  }, []);
+
+  return (
+    <View style={styles.textContainer}>
+      <Text style={styles.title}>Bienvenido</Text>
+      <Text style={styles.subtitle}>{userName || "Usuario"}</Text>
+
+    </View>
+  );
+};
 
 const handleLogout = () => {
   Alert.alert(
@@ -52,25 +80,28 @@ export default function App(): React.ReactElement {
 
   const bannerWidth = 385;
   
-  // Cargar imágenes del banner desde el backend o usar estáticas si hay error
-  useEffect(() => {
-    async function loadBannerImages() {
-      setIsLoadingImages(true);
-      try {
-        // getBannerImages maneja internamente la lógica de fallback
-        const images = await getBannerImages();
-        setBannerImages(images);
-      } catch (error) {
-        // En caso de error extremo, usar las imágenes locales como último recurso
-        setBannerImages(fallbackBannerImages.map((img, idx) => ({
-          name: `banner${idx + 1}`,
-          url: Image.resolveAssetSource(img).uri
-        })));
-      } finally {
-        setIsLoadingImages(false);
-      }
+  // Función para cargar imágenes del banner
+  const loadBannerImages = async () => {
+    setIsLoadingImages(true);
+    try {
+      // getBannerImages maneja internamente la lógica de fallback
+      const images = await getBannerImages();
+      setBannerImages(images);
+      setCurrentIndex(0); // Resetear el índice del carrusel
+      scrollRef.current?.scrollTo({ x: 0, animated: true }); // Volver al inicio del carrusel
+    } catch (error) {
+      // En caso de error extremo, usar las imágenes locales como último recurso
+      setBannerImages(fallbackBannerImages.map((img, idx) => ({
+        name: `banner${idx + 1}`,
+        url: Image.resolveAssetSource(img).uri
+      })));
+    } finally {
+      setIsLoadingImages(false);
     }
-    
+  };
+
+  // Cargar imágenes al montar el componente
+  useEffect(() => {
     loadBannerImages();
   }, []);
 
@@ -104,7 +135,13 @@ export default function App(): React.ReactElement {
           <Ionicons name="language-outline" size={36} color="#000000ff" />
         </TouchableOpacity>
         <View style={styles.logoCenter}>
-          <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}> 
+          <TouchableOpacity 
+            style={styles.logoContainer} 
+            onPress={() => {
+              // Si ya estamos en main, solo recargamos los datos
+              loadBannerImages();
+            }}
+          > 
             <Image source={require("../assets/images/logo.png")} style={styles.logo} />
           </TouchableOpacity>
         </View>
@@ -113,10 +150,7 @@ export default function App(): React.ReactElement {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>Bienvenido</Text>
-        <Text style={styles.subtitle}>Fabian Jimenez</Text>
-      </View>
+      <UserWelcome />
 
       {/* BANNER DE PUBLICIDAD - Carrusel con marco redondeado y sombra externa */}
       <View style={styles.bannerShadow}>

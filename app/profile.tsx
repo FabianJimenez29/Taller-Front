@@ -4,21 +4,55 @@ import React from "react";
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View
+  TouchableOpacity,  View,
+  ActivityIndicator
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import MenuBar from "../components/MenuBar";
 
 const ProfileScreen = () => {
   const router = useRouter();
+  const [userData, setUserData] = React.useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    provincia: "",
+    canton: "",
+    distrito: "",
+  });
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserData({
+          fullName: user.fullName || user.full_name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          provincia: user.provincia || "",
+          canton: user.canton || "",
+          distrito: user.distrito || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoBack = () => {
     router.back();
   };
 
   const handleEditProfile = () => {
-    // Aquí iría la lógica para editar el perfil
-    alert("Editar perfil");
+    router.push('/editProfile');
   };
 
   const handleLogout = () => {
@@ -33,45 +67,47 @@ const ProfileScreen = () => {
         <Ionicons name="arrow-back" size={28} color="#000" />
       </TouchableOpacity>
 
-      {/* Foto de perfil y nombre */}
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={60} color="#000" />
-        </View>
-        <Text style={styles.userName}>Fabian J</Text>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#76B414" style={styles.loader} />
+      ) : (
+        <>
+          {/* Foto de perfil y nombre */}
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Ionicons name="person" size={60} color="#000" />
+            </View>
+            <Text style={styles.userName}>{userData.fullName}</Text>
+          </View>
 
-      {/* Tarjeta de información */}
-      <View style={styles.infoCard}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Nombre:</Text>
-          <Text style={styles.infoValue}>Fabian Jimenez Sandoval</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>N° Cédula:</Text>
-          <Text style={styles.infoValue}>1-2345-6789</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>N° Teléfono:</Text>
-          <Text style={styles.infoValue}>+506 1234-5678</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Correo Electrónico:</Text>
-          <Text style={styles.infoValue}>abcdef@gmail.com</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Provincia:</Text>
-          <Text style={styles.infoValue}>Guanacaste</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Cantón:</Text>
-          <Text style={styles.infoValue}>Santa Cruz</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Distrito:</Text>
-          <Text style={styles.infoValue}>Cartagena</Text>
-        </View>
-      </View>
+          {/* Tarjeta de información */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Nombre:</Text>
+              <Text style={styles.infoValue}>{userData.fullName || "No especificado"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>N° Teléfono:</Text>
+              <Text style={styles.infoValue}>{userData.phone || "No especificado"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Correo Electrónico:</Text>
+              <Text style={styles.infoValue}>{userData.email || "No especificado"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Provincia:</Text>
+              <Text style={styles.infoValue}>{userData.provincia || "No especificado"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Cantón:</Text>
+              <Text style={styles.infoValue}>{userData.canton || "No especificado"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Distrito:</Text>
+              <Text style={styles.infoValue}>{userData.distrito || "No especificado"}</Text>
+            </View>
+          </View>
+        </>
+      )}
 
       {/* Botón para editar información */}
       <View style={styles.editSection}>
@@ -98,6 +134,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingBottom: 65, // Espacio reservado para el MenuBar
+  },
+  loader: {
+    marginTop: 100,
   },
   backButton: {
     position: "absolute",
