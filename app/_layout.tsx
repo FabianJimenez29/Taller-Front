@@ -51,7 +51,6 @@ function CustomStack() {
       }}
     >
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="login" />
       <Stack.Screen name="register" />
       <Stack.Screen name="scheduleRepair" />
       <Stack.Screen name="scheduleRepairV2" />
@@ -61,7 +60,9 @@ function CustomStack() {
       <Stack.Screen name="location" />
       <Stack.Screen name="contact" />
       <Stack.Screen name="language" />
-      <Stack.Screen name="admin" />
+      <Stack.Screen name="admin/log" />
+      <Stack.Screen name="admin/mainAdmin" />
+      <Stack.Screen name="admin/quotes" />
     </Stack>
   );
 }

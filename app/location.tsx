@@ -83,16 +83,22 @@ export default function LocationScreen() {
             </View>
             <View style={styles.branchActions}>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, { backgroundColor: '#FFFFFF' }]}
                 onPress={() => openMaps(sucursal.ubicacion)}
               >
-                <Image source={require("../assets/images/maps.png")} style={styles.Icons} />
+                <Image 
+                  source={require("../assets/images/maps.png")} 
+                  style={[styles.Icons, { resizeMode: 'contain' }]} 
+                />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, { backgroundColor: '#FFFFFF' }]}
                 onPress={() => openWaze(sucursal.ubicacion)}
               >
-                <Image source={require("../assets/images/waze-icon.png")} style={styles.Icons} />
+                <Image 
+                  source={require("../assets/images/waze-icon.png")} 
+                  style={[styles.Icons, { resizeMode: 'contain' }]} 
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
@@ -113,10 +119,9 @@ export default function LocationScreen() {
 
 const styles = StyleSheet.create({
   Icons: {
-    
-      width: 24,
-      height: 24,
-    
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
   container: {
     flex: 1,
@@ -199,5 +204,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E5E5',
     borderRadius: 20,
     padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+    height: 40,
   },
 });
