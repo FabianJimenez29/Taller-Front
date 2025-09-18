@@ -76,15 +76,13 @@ const QuotesAdmin = () => {
       const response = await fetch(fullUrl);
       const responseData = await response.json();
       
+      // Para la aplicación móvil, solo mostrar citas del día actual
       const filteredQuotes = responseData.quotes?.filter((quote: Quote) => 
         quote.fecha === todayStr
       ) || [];
       
       setQuotes(filteredQuotes);
       
-      const res = await fetch(fullUrl);
-      const data = await res.json();
-      setQuotes(data.quotes || []);
     } catch (err) {
       console.error('Error fetching quotes:', err);
       if (isInitialLoad) setQuotes([]);
