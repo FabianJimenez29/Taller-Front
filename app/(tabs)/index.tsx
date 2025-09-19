@@ -118,9 +118,13 @@ const Login = (): React.ReactElement => {
         const userRole = data.user?.rol || data.user?.role;
         console.log("🔍 User role:", userRole);
         
-        if (userRole === "admin") {
+        if (userRole === "admin" || userRole === "superadmin") {
           Alert.alert("✅ Bienvenido Administrador", "Accediendo al panel de administración", [
             { text: "Continuar", onPress: () => router.push("/admin/mainAdmin") }
+          ]);
+        } else if (userRole === "tecnico") {
+          Alert.alert("✅ Bienvenido Técnico", "Accediendo a la gestión de citas", [
+            { text: "Continuar", onPress: () => router.push("/admin/quotes") }
           ]);
         } else {
           Alert.alert("✅ Bienvenido", "Inicio de sesión exitoso", [

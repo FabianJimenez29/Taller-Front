@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from "react-native";
 import Constants from "expo-constants";
 import { useFocusEffect, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -51,8 +52,12 @@ const QuotesAdmin = () => {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "No especificada";
     try {
-      const parts = dateString.split("-");
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      // Si la fecha ya está en formato DD/MM/YYYY, devolverla tal como está
+      if (dateString.includes('/')) return dateString;
+      
+      // Si está en formato YYYY-MM-DD, convertirla
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES');
     } catch {
       return dateString;
     }
@@ -138,12 +143,11 @@ const QuotesAdmin = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.quoteDetail}><Text style={styles.bold}>Vehículo:</Text> {item.tipo_placa} - {item.numero_placa}</Text>
-          <Text style={styles.quoteDetail}><Text style={styles.bold}>Marca:</Text> {item.marca}</Text>
-          <Text style={styles.quoteDetail}><Text style={styles.bold}>Modelo:</Text> {item.modelo}</Text>
+          <Text style={styles.quoteDetail}><Text style={styles.bold}>Placa:</Text> {item.tipo_placa} - {item.numero_placa}</Text>
+          <Text style={styles.quoteDetail}><Text style={styles.bold}>Vehículo:</Text> {item.marca} {item.modelo}</Text>
           {item.problema && (
             <Text style={styles.quoteDetail}>
-              <Text style={styles.bold}>Problema Adicional Reportado:</Text> {item.problema}
+              <Text style={styles.bold}>Problema Reportado:</Text> {item.problema}
             </Text>
           )}
         </View>
@@ -189,6 +193,20 @@ const QuotesAdmin = () => {
     try {
       setUpdatingQuote(id);
       const fullUrl = `${BACKEND_URL}/quotes/${id}`;
+      
+      // Obtener el nombre del técnico desde AsyncStorage
+      const userDataString = await AsyncStorage.getItem("user");
+      let tecnicoName = 'Técnico';
+      
+      if (userDataString) {
+        try {
+          const userData = JSON.parse(userDataString);
+          tecnicoName = userData.fullName || userData.nombre || userData.email || 'Técnico';
+        } catch (error) {
+          console.log('Error parsing user data:', error);
+        }
+      }
+      
       const response = await fetch(fullUrl, {
         method: 'PATCH',
         headers: {
@@ -196,7 +214,7 @@ const QuotesAdmin = () => {
         },
         body: JSON.stringify({
           status: newStatus,
-          tecnico: 'Admin' 
+          tecnico: tecnicoName
         })
       });
 
@@ -246,12 +264,17 @@ const QuotesAdmin = () => {
   const keyExtractor = React.useCallback((item: Quote) => item.id?.toString() || Math.random().toString(), []);
 
   const EmptyListComponent = React.useMemo(() => (
-    <Text style={styles.emptyText}>No hay citas agendadas para hoy.</Text>
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>No hay citas agendadas para hoy.</Text>
+      <Text style={styles.emptySubtext}>
+        Las citas aparecerán aquí cuando los clientes las programen para la fecha actual.
+      </Text>
+    </View>
   ), []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>📅 Citas agendadas para hoy ({todayStr})</Text>
+      <Text style={styles.header}>📅 Citas agendadas para hoy ({new Date(todayStr).toLocaleDateString('es-ES')})</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#76B414" style={{ marginTop: 40 }} />
       ) : (
@@ -373,10 +396,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    marginTop: 40,
+  },
   emptyText: {
     fontSize: 16,
     color: "#95a5a6",
     textAlign: "center",
-    marginTop: 40,
+    fontWeight: "600",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#bdc3c7",
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
   },
 });
