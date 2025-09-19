@@ -123,8 +123,8 @@ const Login = (): React.ReactElement => {
             { text: "Continuar", onPress: () => router.push("/admin/mainAdmin") }
           ]);
         } else if (userRole === "tecnico") {
-          Alert.alert("✅ Bienvenido Técnico", "Accediendo a la gestión de citas", [
-            { text: "Continuar", onPress: () => router.push("/admin/quotes") }
+          Alert.alert("✅ Bienvenido Técnico", "Accediendo al panel de administración", [
+            { text: "Continuar", onPress: () => router.push("/admin/mainAdmin") }
           ]);
         } else {
           Alert.alert("✅ Bienvenido", "Inicio de sesión exitoso", [
