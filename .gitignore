@@ -32,8 +32,76 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
 
 # typescript
 *.tsbuildinfo
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+
+# Expo Router
+.expo/types/
+
+# Build outputs
+android/
+ios/
+*.apk
+*.ipa
+*.aab
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# ESLint
+.eslintcache
+
+# Babel
+.babel-cache/
+
+# Expo CLI
+.expo-shared/
+
+# Development builds
+*.dev.js
+
+# Production builds
+build/
+dist/
+
+# Auto-generated files
+*.generated.*
 
 app-example
