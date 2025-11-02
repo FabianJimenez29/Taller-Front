@@ -16,7 +16,7 @@ import { NavigationAnimations } from '../constants/NavigationAnimations';
 import { Colors } from '../constants/Colors';
 
 
-// Componente personalizado para manejar las animaciones de navegación
+
 function CustomStack() {
   const params = useLocalSearchParams<{ direction?: string }>();
   const direction = params.direction;
@@ -24,7 +24,7 @@ function CustomStack() {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? Colors.dark : Colors.light;
   
-  // Determinar la animación basada en el parámetro de dirección
+
   const getAnimation = () => {
     if (direction === 'left') {
       return 'slide_from_left';
@@ -70,14 +70,10 @@ function CustomStack() {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   
-  // Make the font loading optional to prevent app crash
-  // First attempt to load fonts normally
-  
-  // Log application startup information for debugging
   useEffect(() => {
     
     
-    // Check for AsyncStorage token
+
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem('token');

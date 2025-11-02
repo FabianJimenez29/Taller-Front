@@ -54,7 +54,7 @@ const ResumenCita = ({ cita }: ResumenCitaProps) => {
         <Text style={styles.headerTitle}>Servicio Completado</Text>
       </View>
 
-      {/* Tarjeta con información del servicio */}
+
       <View style={styles.card}>
         <View style={styles.statusBanner}>
           <Ionicons name="checkmark-circle" size={24} color="#fff" />
@@ -154,7 +154,7 @@ const ResumenCita = ({ cita }: ResumenCitaProps) => {
         )}
       </View>
       
-      {/* Botón para volver */}
+
       <TouchableOpacity
         style={styles.volverButton}
         onPress={() => router.back()}

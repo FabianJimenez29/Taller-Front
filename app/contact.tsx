@@ -30,15 +30,15 @@ const ContactScreen = () => {
   };
 
   const handleSubmit = () => {
-    // Aquí iría la lógica para enviar el formulario
+
     alert("Formulario enviado");
   };
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+
       <View style={styles.logoRow}>
-        {/* Icono de idioma */}
+
         <TouchableOpacity 
           style={styles.languageIcon} 
           onPress={() => router.push({
@@ -49,17 +49,17 @@ const ContactScreen = () => {
           <Ionicons name="language-outline" size={36} color="#000000" />
         </TouchableOpacity>
 
-        {/* Logo centrado */}
+
         <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
           <Image source={require("../assets/images/logo.png")} style={styles.logo} />
         </TouchableOpacity>
       </View>
 
-      {/* TÍTULO */}
+
       <Text style={styles.title}>Contacto</Text>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Información de contacto */}
+
         <TouchableOpacity style={styles.contactCard} onPress={handleCallCenter}>
           <Text style={styles.contactLabel}>Call Center</Text>
           <Text style={styles.contactInfo}>+506 2222-5544</Text>
@@ -70,7 +70,7 @@ const ContactScreen = () => {
           <Text style={styles.contactInfo}>ventas@superservicio.com</Text>
         </TouchableOpacity>
 
-        {/* Formulario de contacto */}
+
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Nombre Completo</Text>
@@ -133,7 +133,7 @@ const ContactScreen = () => {
         </View>
       </ScrollView>
 
-      {/* MENÚ INFERIOR */}
+
       <MenuBar activeTab="contact" />
     </View>
   );
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingBottom: 65, // Espacio reservado para el MenuBar
+    paddingBottom: 65, 
   },
   logoRow: {
     width: "100%",

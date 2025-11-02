@@ -14,12 +14,10 @@ export default function LocationScreen() {
   };
 
   const openMaps = (ubicacion: string) => {
-    // Abre la ubicación en Google Maps
     Linking.openURL(ubicacion).catch(err => console.error('Error al abrir Google Maps:', err));
   };
 
   const openWaze = (ubicacion: string) => {
-    // Extrae las coordenadas de la URL de Google Maps
     const coordMatch = ubicacion.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (coordMatch && coordMatch.length >= 3) {
       const lat = coordMatch[1];
@@ -37,7 +35,7 @@ export default function LocationScreen() {
     
     const cleanNumber = telefono.replace(/[\s-()]/g, '');
 
-    // Verificar que el dispositivo pueda realizar llamadas
+
     Linking.canOpenURL(`tel:${cleanNumber}`)
       .then(supported => {
         if (!supported) {
@@ -51,9 +49,9 @@ export default function LocationScreen() {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+
       <View style={styles.logoRow}>
-        {/* Icono de idioma */}
+
         <TouchableOpacity
           style={styles.languageIcon}
           onPress={() => router.push({
@@ -64,16 +62,16 @@ export default function LocationScreen() {
           <Ionicons name="language-outline" size={36} color="#000000" />
         </TouchableOpacity>
 
-        {/* Logo centrado */}
+
         <TouchableOpacity style={styles.logoContainer} onPress={() => router.push("/main")}>
           <Image source={require("../assets/images/logo.png")} style={styles.logo} />
         </TouchableOpacity>
       </View>
 
-      {/* TÍTULO */}
+
       <Text style={styles.title}>Sucursales</Text>
 
-      {/* Sucursales List */}
+
       <ScrollView style={styles.scrollView}>
         {sucursales.map((sucursal) => (
           <View key={sucursal.id} style={styles.branchCard}>
@@ -111,7 +109,7 @@ export default function LocationScreen() {
         ))}
       </ScrollView>
 
-      {/* Menu Bar */}
+
       <MenuBar activeTab="location" />
     </View>
   );
@@ -126,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 65, // Espacio reservado para el MenuBar
+    paddingBottom: 65, 
   },
   logoRow: {
     width: "100%",

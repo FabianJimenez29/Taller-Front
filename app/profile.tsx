@@ -56,13 +56,13 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = () => {
-    // Aquí iría la lógica para cerrar sesión
+
     router.push("/");
   };
 
   return (
     <View style={styles.container}>
-      {/* Botón de regreso */}
+
       <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
         <Ionicons name="arrow-back" size={28} color="#000" />
       </TouchableOpacity>
@@ -71,7 +71,7 @@ const ProfileScreen = () => {
         <ActivityIndicator size="large" color="#76B414" style={styles.loader} />
       ) : (
         <>
-          {/* Foto de perfil y nombre */}
+
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
               <Ionicons name="person" size={60} color="#000" />
@@ -79,7 +79,7 @@ const ProfileScreen = () => {
             <Text style={styles.userName}>{userData.fullName}</Text>
           </View>
 
-          {/* Tarjeta de información */}
+
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Nombre:</Text>
@@ -109,7 +109,7 @@ const ProfileScreen = () => {
         </>
       )}
 
-      {/* Botón para editar información */}
+
       <View style={styles.editSection}>
         <Text style={styles.editText}>Necesitás Modificar Tu Información?</Text>
         <TouchableOpacity onPress={handleEditProfile}>
@@ -117,11 +117,11 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Botón para cerrar sesión */}
+
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Cerrar Sesión</Text>
       </TouchableOpacity>
-      {/* MENÚ INFERIOR */}
+
       <MenuBar activeTab="profile" />
     </View>
   );
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingBottom: 65, // Espacio reservado para el MenuBar
+    paddingBottom: 65, 
   },
   loader: {
     marginTop: 100,

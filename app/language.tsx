@@ -22,7 +22,7 @@ export default function LanguageScreen() {
 
   const handleContinue = () => {
     if (previousScreen) {
-      router.push({ pathname: previousScreen as any }); // ✅ corrección
+      router.push({ pathname: previousScreen as any });
     } else {
       router.back();
     }
@@ -30,7 +30,7 @@ export default function LanguageScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header con botón de volver */}
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
@@ -38,7 +38,7 @@ export default function LanguageScreen() {
         <Text style={styles.headerTitle}>Selecciona un idioma</Text>
       </View>
 
-      {/* Lista de idiomas */}
+
       <FlatList
         data={languages}
         keyExtractor={(item) => item.code}
@@ -62,7 +62,7 @@ export default function LanguageScreen() {
         )}
       />
 
-      {/* Botón continuar */}
+
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
         <Text style={styles.continueButtonText}>Continuar</Text>
       </TouchableOpacity>

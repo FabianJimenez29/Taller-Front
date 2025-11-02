@@ -5,6 +5,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Act
 import MenuBar from "../components/MenuBar";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBannerImages, BannerImage } from "../lib/bannerImages";
+import { getFeaturedProducts, FeaturedProduct } from "../lib/productsService";
 
 const reviews = [
   { id: 1, text: "Excelente servicio, muy rápido y confiable." },
@@ -62,7 +63,7 @@ const handleLogout = () => {
       {
         text: "Sí, cerrar sesión",
         onPress: () => {
-          // Aquí puedes limpiar AsyncStorage o tokens si lo deseas
+
           router.push("/");
         },
       },
@@ -77,20 +78,21 @@ export default function App(): React.ReactElement {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bannerImages, setBannerImages] = useState<BannerImage[]>([]);
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
+  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(true);
 
   const bannerWidth = 385;
   
-  // Función para cargar imágenes del banner
+
   const loadBannerImages = async () => {
     setIsLoadingImages(true);
     try {
-      // getBannerImages maneja internamente la lógica de fallback
+
       const images = await getBannerImages();
       setBannerImages(images);
-      setCurrentIndex(0); // Resetear el índice del carrusel
-      scrollRef.current?.scrollTo({ x: 0, animated: true }); // Volver al inicio del carrusel
+      setCurrentIndex(0); 
+      scrollRef.current?.scrollTo({ x: 0, animated: true }); 
     } catch (error) {
-      // En caso de error extremo, usar las imágenes locales como último recurso
       setBannerImages(fallbackBannerImages.map((img, idx) => ({
         name: `banner${idx + 1}`,
         url: Image.resolveAssetSource(img).uri
@@ -100,12 +102,26 @@ export default function App(): React.ReactElement {
     }
   };
 
-  // Cargar imágenes al montar el componente
+  const loadFeaturedProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const products = await getFeaturedProducts();
+      setFeaturedProducts(products);
+    } catch (error) {
+      console.error('Error loading featured products:', error);
+      setFeaturedProducts([]);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+
   useEffect(() => {
     loadBannerImages();
+    loadFeaturedProducts();
   }, []);
 
-  // Auto-scroll effect: solo avanza a la derecha y vuelve al inicio
+
   useEffect(() => {
     if (bannerImages.length === 0) return;
     
@@ -118,9 +134,9 @@ export default function App(): React.ReactElement {
     }, 4500);
 
     return () => clearInterval(interval);
-  }, [bannerImages]); // Se ejecuta cuando cambia bannerImages
+  }, [bannerImages]); 
 
-  // Actualiza el índice al hacer scroll manual
+
   const onScroll = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / bannerWidth);
     setCurrentIndex(index);
@@ -129,7 +145,7 @@ export default function App(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      {/* LOGO Y ICONO DE LENGUAJE */}
+
       <View style={styles.logoRow}>
         <TouchableOpacity style={styles.languageIcon} onPress={() => alert("Cambiar idioma")}> 
           <Ionicons name="language-outline" size={36} color="#000000ff" />
@@ -138,7 +154,7 @@ export default function App(): React.ReactElement {
           <TouchableOpacity 
             style={styles.logoContainer} 
             onPress={() => {
-              // Si ya estamos en main, solo recargamos los datos
+
               loadBannerImages();
             }}
           > 
@@ -152,7 +168,7 @@ export default function App(): React.ReactElement {
 
       <UserWelcome />
 
-      {/* BANNER DE PUBLICIDAD - Carrusel con marco redondeado y sombra externa */}
+
       <View style={styles.bannerShadow}>
         <View style={styles.bannerFrame}>
           {isLoadingImages ? (
@@ -179,7 +195,7 @@ export default function App(): React.ReactElement {
                   />
                 ))}
               </ScrollView>
-              {/* Indicadores de página */}
+
               <View style={styles.carouselDots}>
                 {bannerImages.map((_, idx) => (
                   <View
@@ -196,11 +212,11 @@ export default function App(): React.ReactElement {
         </View>
       </View>
 
-      {/* BOTONES PRINCIPALES */}
+
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push("/scheduleRepair")} // <--- Cambia aquí
+          onPress={() => router.push("/scheduleRepair")} 
         >
           <View style={styles.buttonContent}>
             <Text style={styles.buttonText}>Schedule Repair</Text>
@@ -216,19 +232,54 @@ export default function App(): React.ReactElement {
         </TouchableOpacity>
       </View>
 
-      {/* RESEÑAS */}
-      <ScrollView style={styles.reviews}>
-        <View style={styles.reviewsContent}>
-          <Text style={styles.reviewsTitle}>Reseñas</Text>
-          {reviews.map((review) => (
-            <Text key={review.id} style={styles.reviewText}>
-              {`"${review.text}"`}
-            </Text>
-          ))}
+
+      <ScrollView style={styles.products}>
+        <View style={styles.productsContent}>
+          <Text style={styles.productsTitle}>Productos Destacados</Text>
+          {isLoadingProducts ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#E51514" />
+              <Text style={styles.loadingText}>Cargando productos...</Text>
+            </View>
+          ) : featuredProducts.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.productsRow}>
+                {featuredProducts.map((product) => (
+                  <TouchableOpacity 
+                    key={product.id} 
+                    style={styles.productCard}
+                    onPress={() => {
+
+                      Alert.alert("Producto", `${product.name}\nPrecio: ₡${product.price.toLocaleString()}`);
+                    }}
+                  >
+                    {product.image_url ? (
+                      <Image 
+                        source={{ uri: product.image_url }} 
+                        style={styles.productImage}
+                        defaultSource={require("../assets/images/logo.png")}
+                      />
+                    ) : (
+                      <View style={styles.productImagePlaceholder}>
+                        <Ionicons name="image-outline" size={40} color="#ccc" />
+                      </View>
+                    )}
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productCategory}>{product.category_name}</Text>
+                      <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+                      <Text style={styles.productPrice}>₡{product.price.toLocaleString()}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          ) : (
+            <Text style={styles.noProductsText}>No hay productos disponibles</Text>
+          )}
         </View>
       </ScrollView>
 
-      {/* MENÚ INFERIOR */}
+
       <MenuBar activeTab="home" />
     </View>
   );
@@ -240,7 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    paddingBottom: 65, // Espacio reservado para el MenuBar
+    paddingBottom: 65, 
   },
   logoRow: {
     width: "100%",
@@ -285,7 +336,6 @@ const styles = StyleSheet.create({
   bannerShadow: {
     alignSelf: "center",
     borderRadius: 28,
-    // Sombra externa
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.35,
@@ -369,7 +419,7 @@ const styles = StyleSheet.create({
   reviews: {
     width: "100%",
     paddingHorizontal: 20,
-    marginBottom: 20, // Espacio adicional antes del MenuBar
+    marginBottom: 20, 
   },
   reviewsContent: {
     backgroundColor: "#E51514",
@@ -393,6 +443,91 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
     color: "#fff",
+  },
+  products: {
+    width: "100%",
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  productsContent: {
+    backgroundColor: "#f8f9fa",
+    padding: 15,
+    borderRadius: 20,
+    minHeight: 200,
+    width: 385,
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  productsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#E51514",
+    textAlign: "center",
+  },
+  productsRow: {
+    flexDirection: "row",
+    gap: 15,
+    paddingHorizontal: 5,
+  },
+  productCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+    width: 150,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  productImage: {
+    width: "100%",
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    resizeMode: "cover",
+  },
+  productImagePlaceholder: {
+    width: "100%",
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  productInfo: {
+    gap: 4,
+  },
+  productCategory: {
+    fontSize: 10,
+    color: "#76B414",
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    lineHeight: 18,
+  },
+  productPrice: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#E51514",
+    marginTop: 4,
+  },
+  noProductsText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    fontStyle: "italic",
   },
   menuBar: {
     flexDirection: "row",
@@ -434,7 +569,7 @@ const styles = StyleSheet.create({
   },
   carouselDots: {
     position: "absolute",
-    bottom: 0, // más abajo del carrusel
+    bottom: 0, 
     left: 0,
     right: 0,
     flexDirection: "row",
@@ -448,13 +583,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#76B414",
     marginHorizontal: 6,
     borderWidth: 2,
-    borderColor: "transparent", // Agrega esto
+    borderColor: "transparent", 
   },
   dotActive: {
     backgroundColor: "#E51514",
     borderWidth: 2,
     width: 15,
-    borderColor: "transparent", // Agrega esto
+    borderColor: "transparent", 
   },
   logoutButton: {
     position: "absolute",

@@ -31,7 +31,7 @@ const EditProfileScreen = () => {
   const [saving, setSaving] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Estados para los campos editables
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -89,7 +89,6 @@ const EditProfileScreen = () => {
 
     setSaving(true);
     try {
-      // Asegurarnos de que tenemos el ID
       if (!userData?.id) {
         throw new Error("ID de usuario no encontrado");
       }

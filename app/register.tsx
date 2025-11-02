@@ -46,7 +46,7 @@ const Register = (): React.ReactElement => {
   const [canton, setCanton] = useState("");
   const [distrito, setDistrito] = useState("");
 
-  // Picker temporales
+
   const [modalProvincia, setModalProvincia] = useState(false);
   const [modalCanton, setModalCanton] = useState(false);
   const [modalDistrito, setModalDistrito] = useState(false);
@@ -54,7 +54,7 @@ const Register = (): React.ReactElement => {
   const [tempCanton, setTempCanton] = useState("");
   const [tempDistrito, setTempDistrito] = useState("");
 
-  // Animaciones
+
   const logoScale = useSharedValue(0.8);
   const logoRotation = useSharedValue(0);
   const formSlide = useSharedValue(50);
@@ -152,7 +152,7 @@ const Register = (): React.ReactElement => {
     handleRegister();
   };
 
-  // Funciones para obtener cantones y distritos
+
   const getCantonesFromProvincia = () => {
     const provinciaObj = provincias.find((p) => p.nombre === provincia);
     return provinciaObj ? provinciaObj.cantones : [];
@@ -165,7 +165,7 @@ const Register = (): React.ReactElement => {
     return cantonObj ? cantonObj.distritos : [];
   };
 
-  // Funciones para modales y confirmar
+
   const openProvinciaModal = () => { setTempProvincia(provincia || ""); setModalProvincia(true); };
   const openCantonModal = () => { if (provincia) { setTempCanton(canton || ""); setModalCanton(true); } };
   const openDistritoModal = () => { if (canton) { setTempDistrito(distrito || ""); setModalDistrito(true); } };
@@ -182,7 +182,7 @@ const Register = (): React.ReactElement => {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* LOGO ANIMADO */}
+
         <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
           <Image
             source={require("../assets/images/logo.png")}
@@ -192,13 +192,13 @@ const Register = (): React.ReactElement => {
           <Text style={styles.subtitleText}>Crea tu cuenta para comenzar</Text>
         </Animated.View>
 
-        {/* FORMULARIO */}
+
         <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
           <Animated.View entering={FadeInDown.delay(300).duration(800)}>
             <Text style={styles.formTitle}>Crear Cuenta</Text>
           </Animated.View>
 
-          {/* NOMBRE COMPLETO */}
+
           <Animated.View entering={SlideInRight.delay(400).duration(600)}>
             <Text style={styles.label}>👤 Nombre Completo</Text>
             <View style={styles.inputContainer}>
@@ -213,7 +213,7 @@ const Register = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* EMAIL */}
+
           <Animated.View entering={SlideInLeft.delay(450).duration(600)}>
             <Text style={styles.label}>📧 Correo Electrónico</Text>
             <View style={styles.inputContainer}>
@@ -230,7 +230,7 @@ const Register = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* TELÉFONO */}
+
           <Animated.View entering={SlideInRight.delay(500).duration(600)}>
             <Text style={styles.label}>📱 Teléfono</Text>
             <View style={styles.inputContainer}>
@@ -245,7 +245,7 @@ const Register = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* CONTRASEÑA */}
+
           <Animated.View entering={SlideInLeft.delay(550).duration(600)}>
             <Text style={styles.label}>🔒 Contraseña</Text>
             <View style={styles.inputContainer}>
@@ -273,7 +273,7 @@ const Register = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* CONFIRMAR CONTRASEÑA */}
+
           <Animated.View entering={SlideInRight.delay(600).duration(600)}>
             <Text style={styles.label}>✅ Confirmar Contraseña</Text>
             <View style={styles.inputContainer}>
@@ -301,7 +301,7 @@ const Register = (): React.ReactElement => {
             </View>
           </Animated.View>
 
-          {/* PROVINCIA PICKER */}
+
           <Animated.View entering={SlideInLeft.delay(580).duration(600)}>
             <Text style={styles.label}>🌎 Provincia</Text>
             <TouchableOpacity
@@ -350,7 +350,7 @@ const Register = (): React.ReactElement => {
             </Modal>
           </Animated.View>
 
-          {/* CANTÓN PICKER */}
+
           <Animated.View entering={SlideInRight.delay(600).duration(600)}>
             <Text style={styles.label}>🏙️ Cantón</Text>
             <TouchableOpacity
@@ -400,7 +400,7 @@ const Register = (): React.ReactElement => {
             </Modal>
           </Animated.View>
 
-          {/* DISTRITO PICKER */}
+
           <Animated.View entering={SlideInLeft.delay(620).duration(600)}>
             <Text style={styles.label}>🏡 Distrito</Text>
             <TouchableOpacity
@@ -450,7 +450,7 @@ const Register = (): React.ReactElement => {
             </Modal>
           </Animated.View>
 
-          {/* BOTÓN REGISTER */}
+
           <Animated.View entering={FadeInUp.delay(650).duration(800)}>
             <TouchableOpacity
               style={[
@@ -468,7 +468,7 @@ const Register = (): React.ReactElement => {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* BOTÓN LOGIN */}
+
           <Animated.View entering={FadeInUp.delay(700).duration(800)}>
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>¿Ya tienes cuenta?</Text>
@@ -479,7 +479,7 @@ const Register = (): React.ReactElement => {
           </Animated.View>
         </Animated.View>
 
-        {/* INFORMACIÓN ADICIONAL */}
+
         <Animated.View entering={FadeIn.delay(800).duration(800)} style={styles.infoContainer}>
           <Text style={styles.infoTitle}>ℹ️ Información:</Text>
           <Text style={styles.infoText}>• Todos los campos son obligatorios</Text>
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 5,
   },
-  // Nuevo estilo para los campos picker
+
   inputField: {
     backgroundColor: "#fff",
     borderWidth: 2,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     textAlign: "center",
   },
-  // Estilos del modal actualizados
+
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingVertical: 68, // Para centrar las opciones
+    paddingVertical: 68, 
   },
   pickerOption: {
     height: 44,

@@ -6,10 +6,9 @@ interface Promotion {
   endDate: Date;
 }
 
-// Default export para resolver el warning
+
 export default {
   getPromotions: async (): Promise<Promotion[]> => {
-    // Implementar lógica para obtener promociones
     return [];
   }
 };

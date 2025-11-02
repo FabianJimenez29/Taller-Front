@@ -36,7 +36,7 @@ type ProcesoCita = {
   };
 };
 
-// Ya no necesitamos este componente, usaremos ChecklistServicio
+
 
 export default function ProcesarCitaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -82,7 +82,7 @@ export default function ProcesarCitaScreen() {
       setCompletedSteps(prev => prev.filter(id => id !== stepId));
     }
     
-    // Actualizar el estado de completado en los pasos
+
     setPasosProceso(prev => 
       prev.map(paso => 
         paso.id === stepId ? { ...paso, completado: completed } : paso
@@ -101,15 +101,15 @@ export default function ProcesarCitaScreen() {
   };
 
   const handleSaveProgress = async () => {
-    // Ya no verificamos si el nombre del técnico está vacío, porque se muestra el que viene del usuario
-    // o del sistema, pero no se puede modificar
+
+
     if (!nombreTecnico.trim()) {
-      setNombreTecnico("Técnico no identificado"); // Asignamos un valor por defecto
+      setNombreTecnico("Técnico no identificado"); 
     }
 
     setSavingData(true);
     try {
-      // Determinar si todos los pasos están completados
+
       const todosPasosCompletados = pasosProceso.every(paso => paso.completado);
       
       console.log('Enviando datos al servidor:', {
@@ -153,7 +153,7 @@ export default function ProcesarCitaScreen() {
     } catch (error: any) {
       console.error('Error al guardar progreso:', error);
       
-      // Mostrar mensaje de error más detallado
+
       Alert.alert(
         'Error', 
         `No se pudo actualizar el estado de la cita: ${error.message || 'Error desconocido'}. Verifica tu conexión a internet e intenta nuevamente.`
@@ -210,7 +210,7 @@ export default function ProcesarCitaScreen() {
     );
   }
   
-  // Si la cita ya está completada, mostrar el componente de resumen
+
   if (cita.status === 'Completado') {
     return <ResumenCita cita={cita} />;
   }
@@ -236,7 +236,7 @@ export default function ProcesarCitaScreen() {
             {cita.servicio || "Servicio no especificado"}
           </Text>
 
-          {/* Información del cliente */}
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Cliente</Text>
             <Text style={styles.detailText}>
@@ -247,7 +247,7 @@ export default function ProcesarCitaScreen() {
             </Text>
           </View>
 
-          {/* Información del vehículo */}
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Vehículo</Text>
             <Text style={styles.detailText}>
@@ -263,7 +263,7 @@ export default function ProcesarCitaScreen() {
             )}
           </View>
 
-          {/* Información de la cita */}
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Detalles de la cita</Text>
             <Text style={styles.detailText}>
@@ -278,7 +278,7 @@ export default function ProcesarCitaScreen() {
           </View>
         </View>
 
-        {/* Nombre del técnico */}
+
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Técnico responsable</Text>
           <View style={styles.tecnicoReadOnly}>
@@ -311,7 +311,7 @@ export default function ProcesarCitaScreen() {
           />
         </View>
 
-        {/* Checklist de pasos del servicio */}
+
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Pasos del servicio</Text>
           {pasosProceso.length > 0 ? (
@@ -326,7 +326,7 @@ export default function ProcesarCitaScreen() {
         </View>
       </ScrollView>
 
-      {/* Botones de acción */}
+
       <View style={styles.buttonsContainer}>
         <TouchableOpacity 
           style={styles.cancelButton}

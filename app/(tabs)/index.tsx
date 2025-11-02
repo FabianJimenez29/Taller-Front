@@ -39,7 +39,7 @@ const Login = (): React.ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Animaciones
+
   const logoScale = useSharedValue(0.8);
   const logoRotation = useSharedValue(0);
   const formSlide = useSharedValue(50);
@@ -53,7 +53,7 @@ const Login = (): React.ReactElement => {
 
   useEffect(() => {
     try {
-      // Simplified animations
+
       logoScale.value = withSpring(1);
       formSlide.value = withSpring(0);
     } catch (err) {
@@ -77,7 +77,7 @@ const Login = (): React.ReactElement => {
     try {
     
       
-      // Use the fallback URL if needed
+
       const loginUrl = `${BACKEND_URL}/login`;
       console.log("🔍 Full login URL:", loginUrl);
       
@@ -96,10 +96,10 @@ const Login = (): React.ReactElement => {
 
       if (res.ok) {
         console.log("✅ Login successful");
-        // Guardar token y datos del usuario completos
+
         await AsyncStorage.setItem("token", data.token);
         
-        // Asegurarse de que todos los datos del usuario estén almacenados correctamente
+
         const userData = {
           id: data.user.id,
           fullName: data.user.fullName,
@@ -114,7 +114,7 @@ const Login = (): React.ReactElement => {
         console.log("🔍 Saving user data:", JSON.stringify(userData).substring(0, 200));
         await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-        // Verificar el rol del usuario directamente desde la respuesta
+
         const userRole = data.user?.rol || data.user?.role;
         console.log("🔍 User role:", userRole);
         

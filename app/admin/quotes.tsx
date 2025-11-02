@@ -52,10 +52,10 @@ const QuotesAdmin = () => {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "No especificada";
     try {
-      // Si la fecha ya está en formato DD/MM/YYYY, devolverla tal como está
+
       if (dateString.includes('/')) return dateString;
       
-      // Si está en formato YYYY-MM-DD, convertirla
+
       const date = new Date(dateString);
       return date.toLocaleDateString('es-ES');
     } catch {
@@ -81,7 +81,7 @@ const QuotesAdmin = () => {
       const response = await fetch(fullUrl);
       const responseData = await response.json();
       
-      // Para la aplicación móvil, solo mostrar citas del día actual
+
       const filteredQuotes = responseData.quotes?.filter((quote: Quote) => 
         quote.fecha === todayStr
       ) || [];
@@ -194,7 +194,7 @@ const QuotesAdmin = () => {
       setUpdatingQuote(id);
       const fullUrl = `${BACKEND_URL}/quotes/${id}`;
       
-      // Obtener el nombre del técnico desde AsyncStorage
+
       const userDataString = await AsyncStorage.getItem("user");
       let tecnicoName = 'Técnico';
       
